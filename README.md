@@ -1,8 +1,28 @@
-# Hoodlox
+<div align="center">
+
+<a href="https://hoodlox.fun"><img src="docs/assets/banner.png" alt="Hoodlox: the blue-to-green H logo beside the wordmark, Dig. Open. Earn., over the low-poly valley with two treasure chests." width="100%"></a>
+
+# HOODLOX
+
+One shared 3D valley on Robinhood Chain. Every 2 hours a fresh set of crates is buried in the grass.<br>
+Find one, dig it before anyone else, and open the chest for ETH, $HUNT or Robinhood stock tokens.
+
+<a href="https://github.com/hoodlox/hoodlox/actions/workflows/ci.yml"><img src="https://github.com/hoodlox/hoodlox/actions/workflows/ci.yml/badge.svg" alt="CI status" height="20"></a>
+<a href="https://github.com/hoodlox/hoodlox/actions/workflows/codeql.yml"><img src="https://github.com/hoodlox/hoodlox/actions/workflows/codeql.yml/badge.svg" alt="CodeQL status" height="20"></a>
+<a href="https://scorecard.dev/viewer/?uri=github.com/hoodlox/hoodlox"><img src="https://api.scorecard.dev/projects/github.com/hoodlox/hoodlox/badge" alt="OpenSSF Scorecard" height="20"></a>
+<a href="#how-a-round-works"><img src="https://img.shields.io/badge/epoch-2h%20%C2%B7%2020%E2%80%9330%20crates-4ADE80" alt="Epoch: 2 hours, 20 to 30 crates" height="20"></a>
+<a href="#known-limits"><img src="https://img.shields.io/badge/smart%20contract-none%20%C2%B7%20server%20%2B%20vault-38BDF8" alt="Smart contract: none, server and vault" height="20"></a>
+<a href="#test"><img src="https://img.shields.io/badge/end--to--end%20checks-7%20scripts-A6F25D" alt="End-to-end checks: 7 scripts" height="20"></a>
+<a href="https://robinhoodchain.blockscout.com"><img src="https://img.shields.io/badge/network-Robinhood%20Chain%20%C2%B7%204663-B9A7F5" alt="Network: Robinhood Chain, chain ID 4663" height="20"></a>
+<a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-8E9AB4" alt="License: Apache-2.0" height="20"></a>
+
+[Website](https://hoodlox.fun) · [Play](https://play.hoodlox.fun) · [Field Manual](https://hoodlox.fun/docs) · [How it works](#how-a-round-works) · [Deploy](#deploy) · [Security policy](SECURITY.md)
+
+</div>
+
+<br>
 
 Hoodlox: hunters walk one shared 3D valley, find crates sunk in the grass, dig them up and open the chests for ETH, $HUNT or Robinhood stock tokens (TSLA, NVDA, AAPL, SPY) on Robinhood Chain (EVM 4663). Rewards come from per-epoch pools held by the project vault.
-
-Live at [hoodlox.fun](https://hoodlox.fun) · game at [play.hoodlox.fun](https://play.hoodlox.fun) · docs at [hoodlox.fun/docs](https://hoodlox.fun/docs)
 
 - Landing, game, docs: `index.html`, `map.html`, `docs.html`, client code in `src/`
 - API (one Vercel function): `api/index.js` → `server/routes.js`

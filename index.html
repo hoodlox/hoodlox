@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Hoodlox</title>
+  <meta name="description" content="Dig up chests in a shared low-poly valley on Robinhood Chain. Open them for ETH, $HUNT and tokenized stocks." />
+  <link rel="icon" type="image/png" href="/brand/logo-64.png" />
+  <link rel="apple-touch-icon" href="/brand/logo-180.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/landing.css" />
+</head>
+<body>
+  <div class="grid-bg" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a class="brand" href="/"><img class="brand__logo" src="/brand/logo-64.png" alt="" /><span>Hoodlox</span></a>
+    <nav class="nav__links">
+      <a href="#world">World</a>
+      <a href="#chests">Chests</a>
+      <a href="#tools">Tools</a>
+      <a href="#how">How it works</a>
+      <a href="/docs">Docs</a>
+    </nav>
+    <div class="nav__right">
+      <span class="season mono">Season 0 · <b>Free to play</b></span>
+      <div class="balance mono" title="This epoch's reward pool"><span class="coin" aria-hidden="true"></span><span class="js-balance">—</span><a class="balance__plus" href="#tools" aria-label="Get tools">+</a></div>
+      <a class="avatar" href="/play" aria-label="Play"><img src="/scenes/adventurers/portraits/Knight.png" alt="" /></a>
+    </div>
+  </header>
+
+  <main>
+    <!-- ── hero ─────────────────────────────────────────────────────────────── -->
+    <section class="hero">
+      <img class="hero__logo" src="/brand/logo-512.png" alt="Hoodlox" width="120" height="120" />
+      <p class="hero__kicker mono"><span class="dot"></span>Live on Robinhood Chain · <span class="js-online">a new epoch every 2 hours</span></p>
+      <h1 class="display hero__title">Treasure.<br />Dig. Open. Earn.</h1>
+      <p class="hero__sub mono">One shared valley. Chests buried in the grass. Pick a hunter, dig them up, open them for ETH, $HUNT and tokenized stocks.</p>
+      <div class="hero__cta">
+        <a class="btn btn--primary js-play" href="/play">Play in browser <span aria-hidden="true">→</span></a>
+        <a class="btn btn--ghost" href="/docs">Read the docs</a>
+      </div>
+      <img class="float float--l" src="/scenes/chests/icons/legendary-closed.png" alt="" aria-hidden="true" />
+      <img class="float float--r" src="/scenes/chests/icons/rare-open.png" alt="" aria-hidden="true" />
+
+      <div class="fan" role="list" aria-label="Hunters"></div>
+    </section>
+
+    <!-- ── world ────────────────────────────────────────────────────────────── -->
+    <section class="world" id="world">
+      <div class="world__frame">
+        <img class="world__bg" src="/landing/valley.jpg" alt="The valley: a forest ringed by mountains" />
+        <div class="world__shade"></div>
+        <div class="world__copy">
+          <ul class="tags mono"><li>Open world</li><li>Treasure hunt</li><li>Shared map</li></ul>
+          <p class="world__eyebrow">Hoodlox™ <span>World</span></p>
+          <h2 class="display world__title">The Twin<br />Valley</h2>
+          <p class="world__text mono">Every hunter walks the same valley. Look for the chests sunk halfway into the grass, claim one, and dig before anyone else does.</p>
+          <p class="price mono"><b>Free shovel</b> <s>0.2% supply</s></p>
+          <a class="btn btn--outline" href="/play">Enter the valley <span class="circle" aria-hidden="true">↗</span></a>
+        </div>
+        <div class="world__rail">
+          <div class="rail" role="list" aria-label="Chest rarities"></div>
+          <div class="rail__nav">
+            <button class="round js-prev" type="button" aria-label="Previous">‹</button>
+            <button class="round js-next" type="button" aria-label="Next">›</button>
+            <span class="rail__count display js-count">01</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── chests ───────────────────────────────────────────────────────────── -->
+    <section class="section" id="chests">
+      <header class="section__head">
+        <p class="eyebrow mono">02 · Loot</p>
+        <h2 class="display section__title">Five chests.<br />Three kinds of loot.</h2>
+      </header>
+      <div class="loot">
+        <article class="loot__card loot__card--sol"><p class="mono">Native</p><h3 class="display">ETH</h3><p>Paid straight to your wallet when a chest rolls ETH.</p></article>
+        <article class="loot__card loot__card--hunt"><p class="mono">Token</p><h3 class="display">$HUNT</h3><p>A slice of supply, larger the rarer the chest.</p></article>
+        <article class="loot__card loot__card--stock"><p class="mono">Tokenized stocks</p><h3 class="display">Stocks</h3><p>Robinhood stock tokens: TSLA, NVDA, AAPL and SPY, fractional and on-chain.</p></article>
+      </div>
+      <ol class="odds" aria-label="Drop chances"></ol>
+    </section>
+
+    <!-- ── tools ────────────────────────────────────────────────────────────── -->
+    <section class="section" id="tools">
+      <header class="section__head">
+        <p class="eyebrow mono">03 · Shop</p>
+        <h2 class="display section__title">Dig faster.</h2>
+        <p class="section__sub mono">Every hunter starts with a free shovel. Better tools dig the same chests in less time, so you beat the crowd to them.</p>
+      </header>
+      <div class="tools"></div>
+    </section>
+
+    <!-- ── how ──────────────────────────────────────────────────────────────── -->
+    <section class="section" id="how">
+      <header class="section__head">
+        <p class="eyebrow mono">04 · How it works</p>
+        <h2 class="display section__title">Four steps to loot.</h2>
+      </header>
+      <ol class="steps">
+        <li><span class="display">01</span><h3>Connect</h3><p class="mono">Connect your wallet, or look around as a guest first.</p></li>
+        <li><span class="display">02</span><h3>Pick a hunter</h3><p class="mono">Six heroes. Name your agent and drop into the valley.</p></li>
+        <li><span class="display">03</span><h3>Find &amp; dig</h3><p class="mono">Spot a half-buried chest, claim it, and dig. Nobody else can while you do.</p></li>
+        <li><span class="display">04</span><h3>Open</h3><p class="mono">Open chests from your inventory for ETH, $HUNT or stocks.</p></li>
+      </ol>
+    </section>
+
+    <!-- ── final cta ────────────────────────────────────────────────────────── -->
+    <section class="final">
+      <h2 class="display">The valley is open.</h2>
+      <a class="btn btn--primary" href="/play">Start hunting <span aria-hidden="true">→</span></a>
+      <p class="mono muted">Season 0 test. Rewards and prices are placeholders until the vault is live on Robinhood Chain.</p>
+    </section>
+  </main>
+
+  <footer class="foot mono">
+    <span>© 2026 Hoodlox · <a href="/docs">Field Manual</a></span>  </footer>
+
+  <script type="module" src="/src/landing.js"></script>
+</body>
+</html>

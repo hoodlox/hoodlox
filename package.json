@@ -1,0 +1,22 @@
+{
+  "name": "treasurehunt",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "manifest": "node tools/manifest.mjs",
+    "shot": "node tools/shot.mjs"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.10",
+    "@neondatabase/serverless": "^1.2.0",
+    "three": "^0.186.0",
+    "viem": "^2.57.7"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0",
+    "vite": "^8.3.0"
+  }
+}

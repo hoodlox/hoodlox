@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.data/
+.env*
+!.env.example
+shots/
+dev-assets/
+*.log
+.vercel/
+
+.vercel
+.env*

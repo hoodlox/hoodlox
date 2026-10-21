@@ -1,0 +1,9 @@
+.data
+dev-assets
+shots
+tools
+*.log
+kit.html
+portrait.html
+.env*
+.vercel

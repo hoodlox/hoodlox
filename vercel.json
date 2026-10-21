@@ -1,0 +1,21 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "vite build",
+  "outputDirectory": "dist",
+  "functions": { "api/index.js": { "maxDuration": 60 } },
+  "redirects": [
+    { "source": "/play", "has": [{ "type": "host", "value": "hoodlox.fun" }], "destination": "https://play.hoodlox.fun/", "permanent": false },
+    { "source": "/play", "has": [{ "type": "host", "value": "www.hoodlox.fun" }], "destination": "https://play.hoodlox.fun/", "permanent": false },
+    { "source": "/:path*", "has": [{ "type": "host", "value": "www.hoodlox.fun" }], "destination": "https://hoodlox.fun/:path*", "permanent": true }
+  ],
+  "rewrites": [
+    { "source": "/api/:p*", "destination": "/api?p=:p*" },
+    { "source": "/", "has": [{ "type": "host", "value": "play.hoodlox.fun" }], "destination": "/map.html" },
+    { "source": "/play", "destination": "/map.html" },
+    { "source": "/docs", "destination": "/docs.html" }
+  ],
+  "crons": [{ "path": "/api/cron/payouts", "schedule": "0 0 * * *" }],
+  "headers": [
+    { "source": "/scenes/(.*)", "headers": [{ "key": "cache-control", "value": "public, max-age=604800, immutable" }] }
+  ]
+}

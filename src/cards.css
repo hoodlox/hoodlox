@@ -1,0 +1,13 @@
+/* Hunter card look, shared by the landing fan and the in-game picker. Size and position come from the
+   container; set --c (card colour) and optionally --name (name size) on the card. */
+.card { position: relative; display: block; border-radius: 26px; background: var(--c); color: #fff; overflow: hidden;
+  box-shadow: 0 30px 60px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.25); text-decoration: none; }
+.card::before { content: ''; position: absolute; inset: 0; opacity: .22; background: var(--waves) center / 260px; mix-blend-mode: soft-light; }
+.card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(transparent 55%, rgba(0,0,0,.18)); }
+.card__side { position: absolute; left: 16px; top: 16px; margin: 0; font: 500 11px 'JetBrains Mono', ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; opacity: .85; z-index: 1; }
+.card__name { position: absolute; left: 16px; top: 32px; margin: 0; z-index: 1; font: 400 var(--name, 34px)/.92 'Anton', Impact, sans-serif; text-transform: uppercase; }
+.card__rate { position: absolute; right: 12px; top: 12px; display: flex; align-items: center; gap: 6px; padding: 5px 10px 5px 6px; border-radius: 999px;
+  background: rgba(255,255,255,.88); color: #222; font: 600 13px 'JetBrains Mono', ui-monospace, monospace; z-index: 1; }
+.card__rate i { width: 20px; height: 20px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffd98a, #e59a1c 70%); }
+.card img { position: absolute; left: 50%; bottom: 4%; width: 118%; max-width: none; translate: -50% 0; z-index: 1;
+  filter: drop-shadow(0 16px 18px rgba(0,0,0,.28)); }

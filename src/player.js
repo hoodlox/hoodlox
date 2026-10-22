@@ -7,6 +7,7 @@ import { loadHero, loadClips, CLIP } from './agents.js';
 
 const WALK = 300, RUN = 650, GRAVITY = -3000, JUMP = 1000; // cm, cm/s, cm/s²
 const EYE = 165, STEP_UP = 200; // cm
+const TP_FOV = 50, FP_FOV = 72; // degrees (vertical)
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 export async function createPlayer(scene, camera, dom, groundAt, spawn, { hero = 'Knight', name = 'You', scale = 75, view = 'tp' } = {}) {
@@ -47,7 +48,8 @@ export async function createPlayer(scene, camera, dom, groundAt, spawn, { hero =
   const stats = { distance: 0, seconds: 0 };
   let wantsMove = false;
   const jump = () => { if (grounded && !busy) { vy = JUMP; grounded = false; } };
-  const toggleView = () => { view = view === 'tp' ? 'fp' : 'tp'; obj.visible = view === 'tp'; dom.dispatchEvent(new CustomEvent('view', { detail: view })); };
+  // First person starts looking almost level; third person looks down over the shoulder.
+  const toggleView = () => { view = view === 'tp' ? 'fp' : 'tp'; obj.visible = view === 'tp'; pitch = view === 'fp' ? 0.1 : 0.5; dom.dispatchEvent(new CustomEvent('view', { detail: view })); };
   const typing = (e) => e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement;
   addEventListener('keydown', (e) => {
     if (typing(e) || document.body.classList.contains('dash-open')) return; // the dashboard has the keys
@@ -78,15 +80,17 @@ export async function createPlayer(scene, camera, dom, groundAt, spawn, { hero =
     const f = pressed('KeyW', 'ArrowUp') - pressed('KeyS', 'ArrowDown') + stick.y;
     const s = pressed('KeyD', 'ArrowRight') - pressed('KeyA', 'ArrowLeft') + stick.x;
     const stickMag = Math.hypot(stick.x, stick.y);
-    const running = pressed('ShiftLeft', 'ShiftRight') || touch.run || stickMag > 0.85;
+    // The stick only walks; running is Shift or the run button.
+    const running = pressed('ShiftLeft', 'ShiftRight') || touch.run;
     const len = Math.hypot(f, s);
     wantsMove = len > 0;
-    // Camera looks along (sin yaw, 0, cos yaw); right is (cos yaw, 0, -sin yaw).
+    // Camera looks along (sin yaw, 0, cos yaw). Three.js is right-handed, so screen-right is
+    // (-cos yaw, 0, sin yaw), not (cos yaw, 0, -sin yaw).
     const sy = Math.sin(yaw), cy = Math.cos(yaw);
     if (len > 0 && !busy) {
-      const dx = (sy * f + cy * s) / len, dz = (cy * f - sy * s) / len;
-      // A half-pushed stick walks slower; keys and a full stick walk at full speed.
-      const throttle = stickMag > 0 && !pressed('KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight') ? Math.max(0.45, Math.min(1, stickMag / 0.85)) : 1;
+      const dx = (sy * f - cy * s) / len, dz = (cy * f + sy * s) / len;
+      // A lightly pushed stick walks slower; from half way out it walks at full speed.
+      const throttle = stickMag > 0 && !pressed('KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight') ? Math.max(0.4, Math.min(1, stickMag / 0.5)) : 1;
       const speed = (running ? RUN : WALK) * (running ? 1 : throttle);
       const nx = p.x + dx * speed * dt, nz = p.z + dz * speed * dt;
       const gy = groundAt(nx, nz);
@@ -115,10 +119,13 @@ export async function createPlayer(scene, camera, dom, groundAt, spawn, { hero =
       camera.position.set(p.x - sy * dist * cp, p.y + EYE + Math.sin(pitch) * dist, p.z - cy * dist * cp);
       camera.lookAt(target.set(p.x, p.y + EYE * 0.8, p.z));
     } else {
-      const cp = Math.cos(pitch);
-      camera.position.set(p.x, p.y + EYE, p.z);
-      camera.lookAt(target.set(p.x + sy * cp, p.y + EYE - Math.sin(pitch), p.z + cy * cp));
+      // A wider lens and the eye a little behind the head make first person feel zoomed out.
+      const cp = Math.cos(pitch), back = 45;
+      camera.position.set(p.x - sy * back, p.y + EYE, p.z - cy * back);
+      camera.lookAt(target.set(p.x + sy * cp * 100, p.y + EYE - Math.sin(pitch) * 100, p.z + cy * cp * 100));
     }
+    const fov = view === 'fp' ? FP_FOV : TP_FOV;
+    if (camera.fov !== fov) { camera.fov = fov; camera.updateProjectionMatrix(); }
   }
 
   return {

@@ -231,7 +231,6 @@
       background: radial-gradient(circle at 35% 30%, #d9ffb5, var(--gold) 55%, #6fb83a); box-shadow: 0 6px 16px rgba(0,0,0,.45), inset 0 -3px 6px rgba(0,0,0,.25);
       transition: transform .12s ease-out; }
     #stick.is-active .stick__knob { transition: none; }
-    #stick.is-run { border-color: var(--gold); }
     #pad-act { right: 24px; flex-direction: column; align-items: center; }
     #ctl #pad-act button { width: 62px; height: 62px; border-radius: 50%; display: grid; place-items: center; border: 2px solid rgba(255,255,255,.28); }
     #ctl #pad-act #jump { width: 74px; height: 74px; }
@@ -251,7 +250,7 @@
   <div id="ctl">
     <button id="view" type="button">3rd person</button>
     <div id="hint">WASD gerak · Shift lari · Spasi lompat · E gali · H dashboard · M suara · V ganti kamera · drag untuk melihat</div>
-    <div id="stick" class="pad" aria-label="Move: drag the ball, push to the edge to run"><div class="stick__knob"></div></div>
+    <div id="stick" class="pad" aria-label="Move: drag the ball"><div class="stick__knob"></div></div>
     <div id="pad-act" class="pad">
       <button id="run" type="button" aria-label="Run">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="4.5" r="1.8"/><path d="M8 21l3-6 3 2v5M6 12l3-4 4 1 2 4 3 1"/></svg>

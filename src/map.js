@@ -56,7 +56,7 @@ function bindControls(player) {
     for (const ev of ['pointerup', 'pointercancel']) el.addEventListener(ev, off);
   };
   // Analog joystick: the knob follows the thumb inside the ring; distance from the centre sets the
-  // speed, and pushing past 85% runs.
+  // walking speed. Running is the run button only.
   const stick = document.getElementById('stick'), knob = stick.querySelector('.stick__knob');
   let sid = null;
   const move = (e) => {
@@ -67,9 +67,8 @@ function bindControls(player) {
     knob.style.transform = `translate(${x}px, ${y}px)`;
     const mag = Math.min(1, d / R);
     player.setStick(mag < 0.12 ? 0 : x / R, mag < 0.12 ? 0 : -y / R);
-    stick.classList.toggle('is-run', mag > 0.85);
   };
-  const release = () => { sid = null; stick.classList.remove('is-active', 'is-run'); knob.style.transform = ''; player.setStick(0, 0); };
+  const release = () => { sid = null; stick.classList.remove('is-active'); knob.style.transform = ''; player.setStick(0, 0); };
   stick.addEventListener('pointerdown', (e) => { e.preventDefault(); sid = e.pointerId; stick.setPointerCapture(sid); stick.classList.add('is-active'); move(e); });
   stick.addEventListener('pointermove', (e) => { if (e.pointerId === sid) move(e); });
   stick.addEventListener('pointerup', release);
@@ -202,6 +201,7 @@ if (q.has('scene')) {
     console.warn('stage: player');
     controls.enabled = false;
     window.__player = player;
+    window.__camera = camera; // tools/check-player.mjs checks movement against the screen axes
     bindControls(player);
     sites = createDigSites(scene, groundAt);
     sfx = createSfx();

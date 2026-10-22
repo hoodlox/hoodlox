@@ -41,8 +41,9 @@ export async function createPlayer(scene, camera, dom, groundAt, spawn, { hero =
 
   // --- input -------------------------------------------------------------------------------------
   const keys = new Set();
-  const touch = { f: 0, b: 0, l: 0, r: 0, run: 0 };
-  let yaw = 0, pitch = 0.35, vy = 0, grounded = true;
+  const touch = { run: 0 };
+  const stick = { x: 0, y: 0 }; // analog joystick, -1..1, y is forward
+  let yaw = 0, pitch = 0.5, vy = 0, grounded = true;
   const stats = { distance: 0, seconds: 0 };
   let wantsMove = false;
   const jump = () => { if (grounded && !busy) { vy = JUMP; grounded = false; } };
@@ -74,16 +75,19 @@ export async function createPlayer(scene, camera, dom, groundAt, spawn, { hero =
     mixer.update(dt);
     stats.seconds += dt;
     const p = obj.position;
-    const f = pressed('KeyW', 'ArrowUp') - pressed('KeyS', 'ArrowDown') + touch.f - touch.b;
-    const s = pressed('KeyD', 'ArrowRight') - pressed('KeyA', 'ArrowLeft') + touch.r - touch.l;
-    const running = pressed('ShiftLeft', 'ShiftRight') || touch.run;
+    const f = pressed('KeyW', 'ArrowUp') - pressed('KeyS', 'ArrowDown') + stick.y;
+    const s = pressed('KeyD', 'ArrowRight') - pressed('KeyA', 'ArrowLeft') + stick.x;
+    const stickMag = Math.hypot(stick.x, stick.y);
+    const running = pressed('ShiftLeft', 'ShiftRight') || touch.run || stickMag > 0.85;
     const len = Math.hypot(f, s);
     wantsMove = len > 0;
     // Camera looks along (sin yaw, 0, cos yaw); right is (cos yaw, 0, -sin yaw).
     const sy = Math.sin(yaw), cy = Math.cos(yaw);
     if (len > 0 && !busy) {
       const dx = (sy * f + cy * s) / len, dz = (cy * f - sy * s) / len;
-      const speed = running ? RUN : WALK;
+      // A half-pushed stick walks slower; keys and a full stick walk at full speed.
+      const throttle = stickMag > 0 && !pressed('KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight') ? Math.max(0.45, Math.min(1, stickMag / 0.85)) : 1;
+      const speed = (running ? RUN : WALK) * (running ? 1 : throttle);
       const nx = p.x + dx * speed * dt, nz = p.z + dz * speed * dt;
       const gy = groundAt(nx, nz);
       if (gy !== null && gy - groundY < STEP_UP) { stats.distance += Math.hypot(nx - p.x, nz - p.z); p.x = nx; p.z = nz; groundY = gy; }
@@ -106,7 +110,8 @@ export async function createPlayer(scene, camera, dom, groundAt, spawn, { hero =
     play(busy ?? (!grounded ? 'jump' : len > 0 ? (running ? 'run' : 'walk') : 'idle'));
 
     if (view === 'tp') {
-      const dist = 550, cp = Math.cos(pitch);
+      // Further back on narrow (portrait phone) screens so the hunter and its surroundings fit.
+      const dist = camera.aspect < 0.8 ? 1200 : 850, cp = Math.cos(pitch);
       camera.position.set(p.x - sy * dist * cp, p.y + EYE + Math.sin(pitch) * dist, p.z - cy * dist * cp);
       camera.lookAt(target.set(p.x, p.y + EYE * 0.8, p.z));
     } else {
@@ -126,5 +131,6 @@ export async function createPlayer(scene, camera, dom, groundAt, spawn, { hero =
     teleport(x, z) { const y = groundAt(x, z); if (y === null) return false; obj.position.set(x, y, z); groundY = y; vy = 0; grounded = true; return true; },
     get debug() { return { grounded, vy, groundY, y: obj.position.y, keys: [...keys] }; },
     setTouch(key, value) { touch[key] = value; },
+    setStick(x, y) { stick.x = x; stick.y = y; },
   };
 }

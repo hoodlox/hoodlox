@@ -27,5 +27,5 @@ export const cardInner = (hero) => {
   return `<p class="card__side">${h.side}</p>
     <h3 class="card__name display">${h.name}</h3>
     <span class="card__rate"><i></i>${h.rate}</span>
-    <img src="${portrait(hero)}" alt="${h.name}" loading="lazy" />`;
+    <img src="${portrait(hero)}" alt="${h.name}" decoding="async" />`; // not lazy: iOS Safari never loads lazy images inside a scrolling box
 };

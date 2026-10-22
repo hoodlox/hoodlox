@@ -99,7 +99,26 @@
     .icon-btn--me { background: var(--gold); border-color: var(--gold); color: #10200a; font-weight: 600; max-width: 180px; }
     @media (max-width: 900px) { .hud__dashLabel { display: none; } }
     .icon-btn--me span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    @media (max-width: 700px) { .hud__stats div:nth-child(3), .hud__brand b { display: none; } .hud__stats { gap: 12px; } }
+    body .hud { padding-top: env(safe-area-inset-top); height: calc(56px + env(safe-area-inset-top)); }
+    .hud__stats b { white-space: nowrap; }
+    /* Phones: logo + buttons on one row, the numbers in one compact pill underneath. */
+    @media (max-width: 700px) {
+      body .hud { flex-wrap: wrap; height: auto; gap: 8px 10px; padding: calc(8px + env(safe-area-inset-top)) 12px 8px; }
+      .hud__brand b, .icon-btn--me span { display: none; }
+      .hud__brand .brand__logo { width: 34px; height: 34px; }
+      body .hud__actions { gap: 6px; margin-left: auto; }
+      body .icon-btn { height: 38px; min-width: 38px; padding: 0 9px; border-radius: 11px; }
+      body .hud__stats { order: 3; width: fit-content; max-width: 100%; margin: 0; gap: 12px; padding: 6px 12px; border-radius: 999px;
+        background: rgba(15,16,22,.78); border: 1px solid var(--line); backdrop-filter: blur(6px); }
+      body .hud__stats div { flex-direction: row; align-items: baseline; gap: 5px; }
+      body .hud__stats span { font-size: 9px; }
+      body .hud__stats b { font-size: 12px; }
+      /* body-prefixed so they beat the base rules declared further down */
+      body #ctl #view { top: calc(100px + env(safe-area-inset-top)); height: 30px !important; font-size: 12px !important; padding: 0 10px; }
+      body .panel { top: calc(100px + env(safe-area-inset-top)); max-height: calc(100% - 116px - env(safe-area-inset-top)); }
+      body .toast { top: calc(140px + env(safe-area-inset-top)); }
+    }
+    @media (max-width: 380px) { .hud__stats div:nth-child(3) { display: none; } }
 
     .panel { position: fixed; z-index: 30; top: 64px; right: 12px; width: min(380px, calc(100% - 24px)); max-height: calc(100% - 80px);
       display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.45); overflow: hidden; }
@@ -203,13 +222,23 @@
     #view { position: fixed; top: 64px; right: 12px; width: auto !important; height: 34px !important; padding: 0 12px; font-size: 13px !important; font-weight: 600; }
     body.gated #ctl, body.gated #info { display: none; }
     #hint { position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); color: #fff; font-size: 12px; opacity: .75; white-space: nowrap; }
-    .pad { display: none; position: fixed; bottom: calc(24px + env(safe-area-inset-bottom)); gap: 10px; }
-    #pad-move { left: 20px; grid-template-columns: repeat(3, 64px); grid-template-rows: repeat(2, 64px); }
-    #pad-move #f { grid-column: 2; } #pad-move #l { grid-column: 1; grid-row: 2; } #pad-move #b { grid-column: 2; grid-row: 2; } #pad-move #r { grid-column: 3; grid-row: 2; }
-    #pad-act { right: 20px; flex-direction: column; }
+    .pad { display: none; position: fixed; bottom: calc(28px + env(safe-area-inset-bottom)); gap: 14px; }
+    /* Analog joystick: a ring with a ball that follows the thumb. */
+    #stick { left: 24px; width: 136px; height: 136px; border-radius: 50%; pointer-events: auto; touch-action: none;
+      background: radial-gradient(circle, rgba(255,255,255,.06) 0 55%, rgba(255,255,255,.14) 56% 58%, rgba(0,0,0,.28) 59%);
+      border: 2px solid rgba(255,255,255,.28); backdrop-filter: blur(4px); place-items: center; }
+    .stick__knob { width: 60px; height: 60px; border-radius: 50%; pointer-events: none;
+      background: radial-gradient(circle at 35% 30%, #d9ffb5, var(--gold) 55%, #6fb83a); box-shadow: 0 6px 16px rgba(0,0,0,.45), inset 0 -3px 6px rgba(0,0,0,.25);
+      transition: transform .12s ease-out; }
+    #stick.is-active .stick__knob { transition: none; }
+    #stick.is-run { border-color: var(--gold); }
+    #pad-act { right: 24px; flex-direction: column; align-items: center; }
+    #ctl #pad-act button { width: 62px; height: 62px; border-radius: 50%; display: grid; place-items: center; border: 2px solid rgba(255,255,255,.28); }
+    #ctl #pad-act #jump { width: 74px; height: 74px; }
     body.touch .pad { display: flex; }
-    body.touch #pad-move { display: grid; }
+    body.touch #stick { display: grid; }
     body.touch #hint { display: none; }
+    @media (prefers-reduced-motion: reduce) { .stick__knob { transition: none; } }
   </style>
 </head>
 <body>
@@ -222,15 +251,14 @@
   <div id="ctl">
     <button id="view" type="button">3rd person</button>
     <div id="hint">WASD gerak · Shift lari · Spasi lompat · E gali · H dashboard · M suara · V ganti kamera · drag untuk melihat</div>
-    <div id="pad-move" class="pad">
-      <button id="f" type="button" data-dir="f">▲</button>
-      <button id="l" type="button" data-dir="l">◀</button>
-      <button id="b" type="button" data-dir="b">▼</button>
-      <button id="r" type="button" data-dir="r">▶</button>
-    </div>
+    <div id="stick" class="pad" aria-label="Move: drag the ball, push to the edge to run"><div class="stick__knob"></div></div>
     <div id="pad-act" class="pad">
-      <button id="run" type="button">🏃</button>
-      <button id="jump" type="button">⤒</button>
+      <button id="run" type="button" aria-label="Run">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="4.5" r="1.8"/><path d="M8 21l3-6 3 2v5M6 12l3-4 4 1 2 4 3 1"/></svg>
+      </button>
+      <button id="jump" type="button" aria-label="Jump">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V6M6 11l6-6 6 6"/></svg>
+      </button>
     </div>
   </div>
   <script type="module" src="/src/map.js"></script>

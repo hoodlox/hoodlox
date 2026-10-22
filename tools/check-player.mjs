@@ -47,17 +47,26 @@ console.log('after V', state);
 assert.deepEqual(state, { view: 'fp', visible: false, label: '1st person' });
 await page.screenshot({ path: 'shots/player-fp.png' });
 
+// Joystick: a half push walks, a push to the edge runs, letting go stops and recentres the ball.
 await open('&touch=1');
-const t0 = await pos();
-const box = await page.locator('#f').boundingBox();
-await page.mouse.move(box.x + 20, box.y + 20);
-await page.mouse.down();
-const held = await simWait(1);
-await page.mouse.up();
-const t1 = await pos();
-const tspeed = Math.hypot(t1[0] - t0[0], t1[2] - t0[2]) / held;
-console.log('touch button speed', tspeed.toFixed(0), 'cm/s');
-assert.ok(tspeed > 240 && tspeed < 360, 'forward button should walk at about 300 cm/s');
+const box = await page.locator('#stick').boundingBox();
+const cx = box.x + box.width / 2, cy = box.y + box.height / 2, R = box.width / 2 - 14;
+const stickRun = async (dy) => {
+  const a = await pos();
+  await page.mouse.move(cx, cy);
+  await page.mouse.down();
+  await page.mouse.move(cx, cy + dy, { steps: 4 });
+  const held = await simWait(1);
+  const b = await pos();
+  await page.mouse.up();
+  return Math.hypot(b[0] - a[0], b[2] - a[2]) / held;
+};
+const walkSpeed = await stickRun(-R * 0.6);
+const runSpeed = await stickRun(-R * 1.4);
+console.log('joystick walk', walkSpeed.toFixed(0), 'cm/s, run', runSpeed.toFixed(0), 'cm/s');
+assert.ok(walkSpeed > 120 && walkSpeed < 320, 'a half push should walk');
+assert.ok(runSpeed > 500, 'a full push should run');
+assert.equal(await page.evaluate(() => document.querySelector('.stick__knob').style.transform), '', 'released ball recentres');
 await page.screenshot({ path: 'shots/player-touch.png' });
 await browser.close();
 console.log('player ok');

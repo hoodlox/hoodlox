@@ -23,9 +23,9 @@ const MARKUP = `
 <header class="hud">
   <a class="hud__brand" href="/"><img class="brand__logo" src="/brand/logo-64.png" alt="" /><b>${BRAND}</b></a>
   <div class="hud__stats">
-    <div><span>Crates left</span><b class="hud__sites">—</b></div>
-    <div><span>Epoch ends</span><b class="hud__epoch">—</b></div>
-    <div><span>Hunters</span><b class="hud__online">1</b></div>
+    <div><span>Crates</span><b class="hud__sites">—</b></div>
+    <div><span>Epoch</span><b class="hud__epoch">—</b></div>
+    <div><span>Online</span><b class="hud__online">1</b></div>
   </div>
   <div class="hud__actions">
     <button class="icon-btn hud__dashBtn" type="button" aria-label="Dashboard" title="Dashboard (H)">${ICON_DASH}<span class="hud__dashLabel">Dashboard</span></button>

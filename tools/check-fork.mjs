@@ -1,10 +1,10 @@
 // Real-money path on a local fork of Robinhood Chain (Foundry's anvil), calling the API router
 // in-process with a live vault:
 //  1. a fresh player signs in (EIP-191) and creates a hunter,
-//  2. buys the pickaxe with a real $HUNT transfer; the server verifies it on-chain and the same hash
+//  2. buys the pickaxe with a real $HOODL transfer; the server verifies it on-chain and the same hash
 //     cannot be reused,
-//  3. digs and opens chests until it holds a reward, redeems, and the ETH/$HUNT lands in the wallet.
-// $HUNT is played by HIRED (a live Pons token), funded by impersonating its largest holder.
+//  3. digs and opens chests until it holds a reward, redeems, and the ETH/$HOODL lands in the wallet.
+// $HOODL is played by HIRED (a live Pons token), funded by impersonating its largest holder.
 // usage: node tools/check-fork.mjs   (FORK_RPC= to fork from another node)
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -14,7 +14,7 @@ import { join } from 'node:path';
 import { createPublicClient, createWalletClient, createTestClient, http, erc20Abi, parseEther, parseUnits, formatEther, formatUnits } from 'viem';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 
-const HUNT = '0xd1127a84ebce5765ec337141fbfe6407ca2eddce';
+const HOODL = '0xd1127a84ebce5765ec337141fbfe6407ca2eddce';
 const HOLDER = '0x8366a39CC670B4001A1121B8F6A443A643e40951'; // HIRED's largest holder (Pons reserve)
 const RPC = 'http://127.0.0.1:8546';
 const FORK = process.env.FORK_RPC ?? 'https://robinhood-rpc.publicnode.com';
@@ -36,11 +36,11 @@ for (const a of [vault.address, player.address, HOLDER]) await test.setBalance({
 await test.impersonateAccount({ address: HOLDER });
 const holder = createWalletClient({ account: HOLDER, chain, transport: http(RPC) });
 for (const [to, n] of [[player.address, '5000000'], [vault.address, '5000000']]) {
-  await pub.waitForTransactionReceipt({ hash: await holder.writeContract({ address: HUNT, abi: erc20Abi, functionName: 'transfer', args: [to, parseUnits(n, 18)] }) });
+  await pub.waitForTransactionReceipt({ hash: await holder.writeContract({ address: HOODL, abi: erc20Abi, functionName: 'transfer', args: [to, parseUnits(n, 18)] }) });
 }
 
 Object.assign(process.env, {
-  RPC_URL: RPC, VAULT_KEY: vaultKey, HUNT_TOKEN: HUNT, POOL_ETH: '0.01', POOL_HUNT: '2000000', POOL_STOCK_USD: '0',
+  RPC_URL: RPC, VAULT_KEY: vaultKey, HOODL_TOKEN: HOODL, POOL_ETH: '0.01', POOL_HOODL: '2000000', POOL_STOCK_USD: '0',
   PGLITE_DIR: mkdtempSync(join(tmpdir(), 'th-fork-')), ALLOW_TEST_KNOBS: '1',
 });
 const { handle } = await import('../server/routes.js');
@@ -49,7 +49,7 @@ async function call(path, { token, body } = {}) {
   const { status, body: out } = await handle({ method: body ? 'POST' : 'GET', path, body, headers: { ...FAST, ...(token ? { authorization: `Bearer ${token}` } : {}) } });
   return { status, ...out };
 }
-const hunt = async () => Number(formatUnits(await pub.readContract({ address: HUNT, abi: erc20Abi, functionName: 'balanceOf', args: [player.address] }), 18));
+const hunt = async () => Number(formatUnits(await pub.readContract({ address: HOODL, abi: erc20Abi, functionName: 'balanceOf', args: [player.address] }), 18));
 const eth = async () => Number(formatEther(await pub.getBalance({ address: player.address })));
 
 const cfg = await call('/api/config');
@@ -62,7 +62,7 @@ const login = await call('/api/auth/login', { body: { address: player.address, n
 assert.equal(login.status, 200, login.error);
 const token = login.token;
 let me = (await call('/api/player', { token, body: { name: `Fk${Date.now().toString(36).slice(-6)}`, hero: 'Ranger' } })).me;
-console.log('hunter', me.name, '$HUNT on-chain', me.tokens);
+console.log('hunter', me.name, '$HOODL on-chain', me.tokens);
 assert.equal(me.tokens, 5_000_000);
 
 // 2. Buy the pickaxe with a real transfer, as the browser wallet would send it.
@@ -103,7 +103,7 @@ assert.equal(red.payout.status, 'sent');
 const claimed = red.me.claimed.map((c) => `${c.items[0].asset} ${c.status} ${c.signature}`);
 console.log(claimed.join('\n'));
 const ethAfter = await eth(), huntAfter = await hunt();
-console.log(`player ETH ${ethBefore} -> ${ethAfter}, $HUNT ${huntBefore} -> ${huntAfter}`);
+console.log(`player ETH ${ethBefore} -> ${ethAfter}, $HOODL ${huntBefore} -> ${huntAfter}`);
 assert.ok(ethAfter > ethBefore || huntAfter > huntBefore, 'redeem should land in the wallet');
 assert.equal((await call('/api/redeem', { token, body: {} })).status, 400, 'nothing left to redeem twice');
 console.log('fork ok');

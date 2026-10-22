@@ -80,7 +80,7 @@ const xHeader = `<!doctype html><html><head>${FONTS}<style>${BASE}
   <div style="position:absolute;right:56px;top:58px;text-align:right;z-index:30">
     <div style="display:flex;align-items:center;justify-content:flex-end;gap:18px"><img src="${logo}" style="width:118px;filter:drop-shadow(0 12px 30px rgba(40,220,160,.45))"><h1>HOODLOX</h1></div>
     <p class="tag">Dig. Open. Earn.</p>
-    <p style="margin-top:16px;font-size:18px;color:#cfd8e6;line-height:1.45">A shared 3D treasure valley on Robinhood Chain.<br>New crates every 2 hours. ETH · $HUNT · stock tokens.</p>
+    <p style="margin-top:16px;font-size:18px;color:#cfd8e6;line-height:1.45">A shared 3D treasure valley on Robinhood Chain.<br>New crates every 2 hours. ETH · $HOODL · stock tokens.</p>
     <div style="margin-top:18px;display:flex;gap:10px;justify-content:flex-end"><span class="pill">hoodlox.fun</span><span class="pill">play now</span></div>
   </div>
 </body></html>`;

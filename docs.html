@@ -51,7 +51,7 @@
           <li><a href="#pool">The reward pool</a></li>
           <li><a href="#redeem">Redeeming</a></li>
           <li><a href="#progress">Dashboard, levels &amp; ranks</a></li>
-          <li><a href="#token">The $HUNT token</a></li>
+          <li><a href="#token">The $HOODL token</a></li>
           <li><a href="#fairness">Fairness &amp; custody</a></li>
           <li><a href="#addresses">Network &amp; addresses</a></li>
           <li><a href="#faq">FAQ</a></li>
@@ -83,7 +83,7 @@
         <ol class="steps">
           <li><b>Find</b> a crate sunk halfway into the grass. Faint golden motes drift up from it.</li>
           <li><b>Dig</b> it. Nobody else can dig that crate while you do. Your tool decides how long it takes.</li>
-          <li><b>Open</b> the chest from your inventory. It pays ETH, $HUNT or a Robinhood stock token out of the epoch's pool.</li>
+          <li><b>Open</b> the chest from your inventory. It pays ETH, $HOODL or a Robinhood stock token out of the epoch's pool.</li>
           <li><b>Redeem</b> your balances. The vault sends them to your wallet on Robinhood Chain.</li>
         </ol>
         <aside class="callout">
@@ -170,7 +170,7 @@
         <h2>Tools</h2>
         <p>Every hunter starts with a free shovel. Faster tools dig the same crates in less time, so you reach contested crates first. Tools are permanent and you can switch between the ones you own.</p>
         <div class="tools js-tools"></div>
-        <p>Prices are a share of the 1,000,000,000 $HUNT supply. When you buy, your wallet sends a normal $HUNT transfer to the vault. The server confirms it on-chain, then gives you the tool. One payment buys one tool.</p>
+        <p>Prices are a share of the 1,000,000,000 $HOODL supply. When you buy, your wallet sends a normal $HOODL transfer to the vault. The server confirms it on-chain, then gives you the tool. One payment buys one tool.</p>
       </section>
 
       <section id="chests">
@@ -184,7 +184,7 @@
         </ol>
         <div class="assets">
           <div><b>ETH</b><p>Native ETH on Robinhood Chain.</p></div>
-          <div><b>$HUNT</b><p>The game token, valued at its market price.</p></div>
+          <div><b>$HOODL</b><p>The game token, valued at its market price.</p></div>
           <div><b>Stocks</b><p>Robinhood stock tokens: TSLA, NVDA, AAPL or SPY, fractional.</p></div>
         </div>
         <p>If an epoch's pool cannot cover a chest any more (prices moved a lot), that chest opens empty. Opening chests early in an epoch avoids that.</p>
@@ -198,7 +198,7 @@
           <thead><tr><th>Asset</th><th>In the pool</th><th>Value</th><th>Left</th></tr></thead>
           <tbody class="js-poolrows"></tbody>
         </table>
-        <p>Prices for valuing the pool and rewards: ETH from CoinGecko; $HUNT and the stock tokens from their deepest Robinhood Chain pools on DexScreener. Both refresh every minute.</p>
+        <p>Prices for valuing the pool and rewards: ETH from CoinGecko; $HOODL and the stock tokens from their deepest Robinhood Chain pools on DexScreener. Both refresh every minute.</p>
         <aside class="callout"><b>Why rewards are fair across an epoch</b><p>Every crate is worth its rarity weight divided by the weight of all crates in the epoch. Dig and open every crate and you have paid out exactly the pool, no more.</p></aside>
       </section>
 
@@ -228,12 +228,12 @@
 
       <section id="token">
         <p class="num">11</p>
-        <h2>The $HUNT token</h2>
+        <h2>The $HOODL token</h2>
         <ul>
-          <li><b>Supply</b> 1,000,000,000 $HUNT.</li>
-          <li><b>Buys tools</b>: the pickaxe and the drill are paid in $HUNT, a share of supply each.</li>
-          <li><b>Is a reward</b>: part of every epoch pool is paid in $HUNT.</li>
-          <li><b>Can gate digging</b>: the game can require a minimum $HUNT holding to dig. Current minimum: <b class="js-minhold">…</b>.</li>
+          <li><b>Supply</b> 1,000,000,000 $HOODL.</li>
+          <li><b>Buys tools</b>: the pickaxe and the drill are paid in $HOODL, a share of supply each.</li>
+          <li><b>Is a reward</b>: part of every epoch pool is paid in $HOODL.</li>
+          <li><b>Can gate digging</b>: the game can require a minimum $HOODL holding to dig. Current minimum: <b class="js-minhold">…</b>.</li>
         </ul>
         <p class="js-tokenline"></p>
       </section>
@@ -260,7 +260,7 @@
             <tr><th>Network</th><td>Robinhood Chain · chain ID <b class="js-chain">4663</b></td></tr>
             <tr><th>RPC</th><td><code>https://robinhood-rpc.publicnode.com</code></td></tr>
             <tr><th>Explorer</th><td><a class="js-explorer" href="https://robinhoodchain.blockscout.com" target="_blank" rel="noopener">robinhoodchain.blockscout.com</a></td></tr>
-            <tr><th>$HUNT</th><td class="js-hunt">…</td></tr>
+            <tr><th>$HOODL</th><td class="js-hunt">…</td></tr>
             <tr><th>Vault</th><td class="js-vault">…</td></tr>
             <tr><th>TSLA</th><td><code>0x322F0929c4625eD5bAd873c95208D54E1c003b2d</code></td></tr>
             <tr><th>NVDA</th><td><code>0xd0601CE157Db5bdC3162BbaC2a2C8aF5320D9EEC</code></td></tr>
@@ -292,10 +292,10 @@
           <dt>Crate</dt><dd>A buried container on the map. Digging it gives you a chest.</dd>
           <dt>Chest</dt><dd>What a crate turns into in your inventory. Opening it pays a reward.</dd>
           <dt>Claim</dt><dd>Your hold on a crate while you dig it.</dd>
-          <dt>Pool</dt><dd>The ETH, $HUNT and stocks an epoch's crates pay out of.</dd>
+          <dt>Pool</dt><dd>The ETH, $HOODL and stocks an epoch's crates pay out of.</dd>
           <dt>Vault</dt><dd>The wallet that holds the pools, receives tool payments and sends redeems.</dd>
           <dt>Redeem</dt><dd>Moving your balances from the game to your wallet.</dd>
-          <dt>Demo mode</dt><dd>Before launch: $HUNT is simulated, tools cost demo $HUNT, and redeem is off.</dd>
+          <dt>Demo mode</dt><dd>Before launch: $HOODL is simulated, tools cost demo $HOODL, and redeem is off.</dd>
         </dl>
         <p class="end">Good hunting. <a href="/play">Enter the valley →</a></p>
       </section>

@@ -13,12 +13,12 @@ Postgres on Neon and a Robinhood Chain vault wallet for payouts.
 - Make a new wallet for the vault only. Put its private key in `VAULT_KEY`.
 - Fund it with ETH on Robinhood Chain for the pool and for gas (a redeem is one transfer per asset,
   a fraction of a cent each).
-- Launch $HUNT (Pons or letscash.fun), put its address in `HUNT_TOKEN`, and move the epoch pools'
-  $HUNT into the vault.
+- Launch $HOODL (Pons or letscash.fun), put its address in `HOODL_TOKEN`, and move the epoch pools'
+  $HOODL into the vault.
 - For stock rewards, buy TSLA / NVDA / AAPL / SPY stock tokens into the vault. The official Robinhood
   addresses are built in (`server/config.js`); `STOCK_TOKENS` overrides them. A stock the vault does
   not hold makes that redeem fail and retry until it does.
-- Size `POOL_ETH` / `POOL_HUNT` / `POOL_STOCK_USD` so 12 epochs a day fit what the vault holds.
+- Size `POOL_ETH` / `POOL_HOODL` / `POOL_STOCK_USD` so 12 epochs a day fit what the vault holds.
 
 ## 3. Deploy
 `npx vercel --prod`. The landing is `/`, the game is `/play`.

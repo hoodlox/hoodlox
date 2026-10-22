@@ -66,7 +66,7 @@ async function useChain(chainId) {
   }
 }
 
-// Buys a tool. Demo mode just asks the server; otherwise the wallet sends the $HUNT payment the
+// Buys a tool. Demo mode just asks the server; otherwise the wallet sends the $HOODL payment the
 // server prepared, and the server checks it on-chain (retrying while it confirms).
 export async function buyTool(id) {
   if (live.config?.demo) return setMe((await api('/api/shop/buy', { tool: id })).me);

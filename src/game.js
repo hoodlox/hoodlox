@@ -1,7 +1,7 @@
 // Shared game rules and formatting, used by the browser and the server (server/*.js imports this
 // file, so it must stay free of DOM and three.js). Balances, epochs and rewards live on the server.
 export const BRAND = 'Hoodlox';
-export const TOKEN = 'HUNT';
+export const TOKEN = 'HOODL';
 export const HEROES = ['Knight', 'Barbarian', 'Rogue', 'Rogue_Hooded', 'Mage', 'Ranger'];
 export const portrait = (hero) => `/scenes/adventurers/portraits/${hero}.png`; // made by tools/render-portraits.mjs
 
@@ -28,7 +28,7 @@ export const seeded = (seed) => {
 export const TOKEN_SUPPLY = 1_000_000_000; // Robinhood Chain launchpad supply (Pons, letscash)
 export const ofSupply = (pct) => Math.round(TOKEN_SUPPLY * pct / 100);
 export const DEMO_BALANCE = ofSupply(0.35); // what demo mode credits each new hunter (landing shows it too)
-// Every hunter starts with the free shovel; the others cost a share of supply, paid in $HUNT.
+// Every hunter starts with the free shovel; the others cost a share of supply, paid in $HOODL.
 export const TOOLS = [
   { id: 'shovel', name: 'Rusty Shovel', seconds: 60, price: 0 },
   { id: 'pickaxe', name: 'Iron Pickaxe', seconds: 30, price: ofSupply(0.1) },

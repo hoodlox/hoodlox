@@ -39,7 +39,7 @@ export const publicLayout = (n) => layout(n).crates.map(({ i, x, z }) => ({ i, x
 // tokenized stocks.
 export const poolAssets = () => [
   { asset: 'ETH', funded: config.pool.ETH },
-  { asset: TOKEN, funded: config.pool.HUNT },
+  { asset: TOKEN, funded: config.pool.HOODL },
   { asset: 'STOCK_USD', funded: config.pool.STOCK_USD },
 ];
 export async function poolValueUsd() {

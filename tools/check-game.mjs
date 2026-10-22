@@ -47,7 +47,7 @@ for (const tab of ['rewards', 'pool', 'leaderboard', 'inventory', 'shop']) {
   assert.ok(await page.isVisible(`.dash__sec[data-sec="${tab}"]`), `${tab} section should show`);
   await page.screenshot({ path: `shots/dash-${tab}.png` });
   if (tab === 'rewards') assert.ok(await page.isDisabled('.js-redeem'), 'guests cannot redeem');
-  if (tab === 'pool') assert.equal(await page.locator('.js-legend li').count(), 3, 'pool shows SOL, HUNT and xStocks');
+  if (tab === 'pool') assert.equal(await page.locator('.js-legend li').count(), 3, 'pool shows SOL, HOODL and xStocks');
   if (tab === 'shop') assert.ok(await page.isDisabled('.js-shop [data-buy="pickaxe"]'), 'guests cannot buy');
 }
 await page.keyboard.press('KeyW'); // keys belong to the dashboard, the hero must not walk

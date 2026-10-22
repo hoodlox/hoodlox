@@ -9,7 +9,7 @@ import { holding, payable, purchaseTx, verifyPurchase, sendPayout, payoutState, 
 import { TOOLS, tool as toolOf, HEROES, TOKEN, TOKEN_SUPPLY, levelOf, validName } from '../src/game.js';
 
 const fail = (status, error) => { throw Object.assign(new Error(error), { status }); };
-const toolPrice = (t) => t.price; // $HUNT ui units (a share of supply, see game.js)
+const toolPrice = (t) => t.price; // $HOODL ui units (a share of supply, see game.js)
 
 // Test knobs (dev only): shorter epochs and faster digs, sent by the browser as headers.
 const knobs = (h) => ({
@@ -19,11 +19,11 @@ const knobs = (h) => ({
 
 // Wallet holdings are cached a minute per player.
 const holds = new Map();
-async function huntBalance(id) {
-  if (!config.huntToken || isGuest(id)) return null;
+async function hoodlBalance(id) {
+  if (!config.hoodlToken || isGuest(id)) return null;
   const c = holds.get(id);
   if (c && Date.now() - c.at < 60_000) return c.v;
-  const v = await holding(id, config.huntToken).catch(() => null);
+  const v = await holding(id, config.hoodlToken).catch(() => null);
   holds.set(id, { v, at: Date.now() });
   return v;
 }
@@ -41,7 +41,7 @@ async function me(id) {
   const balances = Object.fromEntries(bal.map((b) => [b.asset, b.amount]));
   return {
     id, guest: isGuest(id), name: p.name, hero: p.hero, tools: p.tools, equipped: p.equipped,
-    tokens: config.huntToken ? await huntBalance(id) : p.demo_tokens, demo: !config.huntToken,
+    tokens: config.hoodlToken ? await hoodlBalance(id) : p.demo_tokens, demo: !config.hoodlToken,
     profit: p.profit_usd, treasures: p.treasures, level: levelOf(p).level,
     distance: p.distance, seconds: p.seconds, rank: isGuest(id) ? null : rank.rank,
     chests: chests.map((c) => ({ id: Number(c.id), rarity: c.rarity })),
@@ -76,8 +76,8 @@ async function wallet(ctx) {
 
 const routes = {
   'GET /api/config': async () => ({
-    chainId: config.chainId, explorer: config.explorer, huntToken: config.huntToken, vault: vaultAccount()?.address ?? null,
-    minHold: config.minHold, demo: !config.huntToken, tokenSupply: TOKEN_SUPPLY,
+    chainId: config.chainId, explorer: config.explorer, hoodlToken: config.hoodlToken, vault: vaultAccount()?.address ?? null,
+    minHold: config.minHold, demo: !config.hoodlToken, tokenSupply: TOKEN_SUPPLY,
     tools: TOOLS.map((t) => ({ ...t, price: toolPrice(t) })),
   }),
 
@@ -95,7 +95,7 @@ const routes = {
     if (!HEROES.includes(hero)) fail(400, 'Unknown hunter.');
     try {
       await q('insert into players (id, name, hero, demo_tokens) values ($1, $2, $3, $4) on conflict (id) do nothing',
-        [id, name, hero, config.huntToken || isGuest(id) ? 0 : config.demoTokens]);
+        [id, name, hero, config.hoodlToken || isGuest(id) ? 0 : config.demoTokens]);
     } catch (e) { if (/players_name|unique/.test(e.message)) fail(409, 'That name is taken.'); throw e; }
     return { me: await me(id) };
   },
@@ -139,7 +139,7 @@ const routes = {
     if (Number(ctx.body.epoch) !== n) fail(409, 'That crate belongs to an epoch that has ended.');
     const crate = layout(n).crates[Number(ctx.body.i)];
     if (!crate) fail(404, 'No crate there.');
-    if (config.huntToken && config.minHold > 0 && ((await huntBalance(id)) ?? 0) < config.minHold) {
+    if (config.hoodlToken && config.minHold > 0 && ((await hoodlBalance(id)) ?? 0) < config.minHold) {
       fail(403, `Hold at least ${config.minHold.toLocaleString('en-US')} $${TOKEN} to dig.`);
     }
     const p = await one('select equipped, x, z from players where id = $1', [id]);
@@ -204,17 +204,17 @@ const routes = {
   // --- shop ---
   'POST /api/shop/tx': async (ctx) => {
     const id = await wallet(ctx);
-    if (!config.huntToken) fail(400, 'Demo mode: no token payment needed.');
+    if (!config.hoodlToken) fail(400, 'Demo mode: no token payment needed.');
     const t = TOOLS.find((x) => x.id === ctx.body.tool && x.price > 0) ?? fail(404, 'Unknown tool.');
     return { tx: await purchaseTx(toolPrice(t)) };
   },
   'POST /api/shop/buy': async (ctx) => {
     const id = await wallet(ctx);
     const t = TOOLS.find((x) => x.id === ctx.body.tool && x.price > 0) ?? fail(404, 'Unknown tool.');
-    if (!config.huntToken) {
+    if (!config.hoodlToken) {
       const row = await one(`update players set demo_tokens = demo_tokens - $2, tools = array_append(tools, $3), equipped = $3
         where id = $1 and demo_tokens >= $2 and not ($3 = any(tools)) returning id`, [id, toolPrice(t), t.id]);
-      if (!row) fail(409, 'Not enough $HUNT, or you already own it.');
+      if (!row) fail(409, 'Not enough $HOODL, or you already own it.');
     } else {
       const hash = String(ctx.body.hash ?? '').toLowerCase();
       if (!hash || !(await verifyPurchase(hash, id, toolPrice(t)))) fail(402, 'Payment not found on-chain yet. Try again in a few seconds.');

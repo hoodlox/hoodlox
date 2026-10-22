@@ -1,10 +1,10 @@
-// USD prices, cached a minute: ETH from CoinGecko, $HUNT and the stock tokens from DexScreener's
+// USD prices, cached a minute: ETH from CoinGecko, $HOODL and the stock tokens from DexScreener's
 // Robinhood Chain pairs (deepest pool wins). The placeholder prices in game.js are the fallback
 // (offline, a fork, or a token with no pool yet).
 import { PRICES, TOKEN } from '../src/game.js';
 import { config } from './config.js';
 
-const tokenOf = (asset) => (asset === TOKEN ? config.huntToken : config.stockTokens[asset]);
+const tokenOf = (asset) => (asset === TOKEN ? config.hoodlToken : config.stockTokens[asset]);
 let cache = { at: 0, prices: {} };
 
 async function refresh() {

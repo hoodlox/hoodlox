@@ -38,7 +38,7 @@ async function live() {
   const pool = epoch.pool.reduce((a, p) => a + p.usd, 0);
   set('.js-mode', config.demo ? 'Demo' : 'Live');
   $('.js-modenote').textContent = config.demo
-    ? 'Demo mode: $HUNT is simulated and redeem is off until the token and vault go live. Everything else works as described.'
+    ? 'Demo mode: $HOODL is simulated and redeem is off until the token and vault go live. Everything else works as described.'
     : 'Live: rewards are real and redeem to your wallet.';
   set('.js-epoch', `#${epoch.epoch}`);
   set('.js-crates', epoch.crates.length);
@@ -51,14 +51,14 @@ async function live() {
   set('.js-valhead', `Worth about (${epoch.crates.length} crates)`);
   toolCards(config.tools);
   $('.js-poolrows').innerHTML = epoch.pool.map((p) => `
-    <tr><td>${p.asset === 'HUNT' ? '$HUNT' : p.asset}</td>
+    <tr><td>${p.asset === 'HOODL' ? '$HOODL' : p.asset}</td>
       <td class="num-cell">${p.asset === 'Stocks' ? `${usd(p.funded)} budget` : amount(p.asset, p.funded)}</td>
       <td class="num-cell">${usd(p.usd)}</td><td class="num-cell">${usd(p.leftUsd)}</td></tr>`).join('');
-  set('.js-minhold', config.minHold ? `${amount(TOKEN, config.minHold)} $HUNT` : 'none');
+  set('.js-minhold', config.minHold ? `${amount(TOKEN, config.minHold)} $HOODL` : 'none');
   const link = (a) => `<a href="${config.explorer}/address/${a}" target="_blank" rel="noopener"><code>${short(a)}</code></a>`;
-  $('.js-hunt').innerHTML = config.huntToken ? link(config.huntToken) : 'Announced at launch';
+  $('.js-hunt').innerHTML = config.hoodlToken ? link(config.hoodlToken) : 'Announced at launch';
   $('.js-vault').innerHTML = config.vault ? link(config.vault) : 'Announced at launch';
-  $('.js-tokenline').textContent = config.huntToken ? '' : 'The token has not launched yet. Its address will appear here and in chapter 13.';
+  $('.js-tokenline').textContent = config.hoodlToken ? '' : 'The token has not launched yet. Its address will appear here and in chapter 13.';
   set('.js-chain', config.chainId);
 }
 live().catch(() => { $('.js-modenote').textContent = 'Live numbers are unavailable right now.'; });

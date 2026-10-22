@@ -39,7 +39,7 @@ const page = (w, h, compact) => `<!doctype html><html><head>
   <div class="copy">
     <div class="row"><img src="${logo}"><h1>HOODLOX</h1></div>
     <p class="tag">Dig. Open. Earn.</p>
-    <p class="sub">One shared 3D valley on Robinhood Chain. Crates are buried every 2 hours. Dig them up, open them for ETH, $HUNT and stock tokens.</p>
+    <p class="sub">One shared 3D valley on Robinhood Chain. Crates are buried every 2 hours. Dig them up, open them for ETH, $HOODL and stock tokens.</p>
     <div class="pills"><span>hoodlox.fun</span><span>EVM 4663</span><span>Season 0</span></div>
   </div>
 </body></html>`;

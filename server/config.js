@@ -1,5 +1,5 @@
 // Server configuration from the environment. Everything that touches real funds is opt-in: without a
-// vault and the $HUNT token the game runs in demo mode (demo $HUNT balance, payouts held).
+// vault and the $HOODL token the game runs in demo mode (demo $HOODL balance, payouts held).
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
@@ -27,11 +27,11 @@ export const config = {
   chainId: Number(env.CHAIN_ID ?? 4663),      // Robinhood Chain mainnet
   explorer: env.EXPLORER ?? 'https://robinhoodchain.blockscout.com',
   vaultKey: env.VAULT_KEY ?? null,            // hex private key; pays redeems, receives tool payments
-  huntToken: env.HUNT_TOKEN ?? null,          // $HUNT ERC-20; unset → demo mode for $HUNT
-  minHold: Number(env.HUNT_MIN_HOLD ?? 0),    // $HUNT (ui units) a wallet must hold to dig
+  hoodlToken: env.HOODL_TOKEN ?? null,          // $HOODL ERC-20; unset → demo mode for $HOODL
+  minHold: Number(env.HOODL_MIN_HOLD ?? 0),    // $HOODL (ui units) a wallet must hold to dig
   stockTokens: env.STOCK_TOKENS ? JSON.parse(env.STOCK_TOKENS) : STOCKS, // { "TSLA": "0x…", ... }
   // What each 2-hour epoch's crates pay out in total.
-  pool: { ETH: Number(env.POOL_ETH ?? 0.015), HUNT: Number(env.POOL_HUNT ?? 2_000_000), STOCK_USD: Number(env.POOL_STOCK_USD ?? 25) },
+  pool: { ETH: Number(env.POOL_ETH ?? 0.015), HOODL: Number(env.POOL_HOODL ?? 2_000_000), STOCK_USD: Number(env.POOL_STOCK_USD ?? 25) },
   epochSeconds: Number(env.EPOCH_SECONDS ?? 7200),
   demoTokens: Number(env.DEMO_TOKENS ?? 3_500_000),
   cronSecret: env.CRON_SECRET ?? null,

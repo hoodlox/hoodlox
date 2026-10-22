@@ -1,5 +1,5 @@
-// Everything that touches Robinhood Chain: the vault key, $HUNT holdings, verifying tool purchases and
-// sending redeems. ETH is native; $HUNT and the stock tokens are plain ERC-20s.
+// Everything that touches Robinhood Chain: the vault key, $HOODL holdings, verifying tool purchases and
+// sending redeems. ETH is native; $HOODL and the stock tokens are plain ERC-20s.
 import {
   createPublicClient, createWalletClient, defineChain, http, getAddress, isAddress, isHash, keccak256,
   encodeFunctionData, erc20Abi, parseEventLogs, parseUnits, formatUnits,
@@ -25,7 +25,7 @@ export function vaultAccount() {
   return vault;
 }
 
-export const tokenOf = (asset) => (asset === TOKEN ? config.huntToken : config.stockTokens[asset] ?? null);
+export const tokenOf = (asset) => (asset === TOKEN ? config.hoodlToken : config.stockTokens[asset] ?? null);
 // Assets the vault can actually pay out right now.
 export const payable = (asset) => !!vaultAccount() && (asset === 'ETH' || !!tokenOf(asset));
 export const checksum = (a) => (isAddress(a) ? getAddress(a) : null);
@@ -43,25 +43,25 @@ export async function holding(owner, token) {
   return Number(formatUnits(raw, await decimalsOf(token)));
 }
 
-// The $HUNT payment from the player to the vault, as a transaction request for the wallet to send.
+// The $HOODL payment from the player to the vault, as a transaction request for the wallet to send.
 export async function purchaseTx(amountUi) {
   return {
     chainId: config.chainId,
-    to: config.huntToken,
-    data: encodeFunctionData({ abi: erc20Abi, functionName: 'transfer', args: [vaultAccount().address, await units(config.huntToken, amountUi)] }),
+    to: config.hoodlToken,
+    data: encodeFunctionData({ abi: erc20Abi, functionName: 'transfer', args: [vaultAccount().address, await units(config.hoodlToken, amountUi)] }),
   };
 }
 
-// True when `hash` is a successful transaction carrying at least amountUi $HUNT from `player` to the
+// True when `hash` is a successful transaction carrying at least amountUi $HOODL from `player` to the
 // vault. Replays are stopped by the purchases table (the hash is its primary key).
 export async function verifyPurchase(hash, player, amountUi) {
   if (!isHash(hash)) return false;
   const receipt = await client().getTransactionReceipt({ hash }).catch(() => null);
   if (receipt?.status !== 'success') return false;
-  const need = await units(config.huntToken, amountUi);
+  const need = await units(config.hoodlToken, amountUi);
   const vaultAddr = vaultAccount().address.toLowerCase();
   return parseEventLogs({ abi: erc20Abi, eventName: 'Transfer', logs: receipt.logs }).some((l) =>
-    l.address.toLowerCase() === config.huntToken.toLowerCase()
+    l.address.toLowerCase() === config.hoodlToken.toLowerCase()
     && l.args.from.toLowerCase() === player.toLowerCase()
     && l.args.to.toLowerCase() === vaultAddr
     && l.args.value >= need);

@@ -8,7 +8,7 @@ create table if not exists players (
   hero text not null,
   tools text[] not null default '{shovel}',
   equipped text not null default 'shovel',
-  demo_tokens double precision not null default 0, -- only used while no $HUNT mint is configured
+  demo_tokens double precision not null default 0, -- only used while no $HOODL mint is configured
   profit_usd double precision not null default 0,
   treasures int not null default 0,
   distance double precision not null default 0,
@@ -49,6 +49,11 @@ create table if not exists purchases (
   signature text primary key, player text not null, tool text not null, at timestamptz not null default now()
 );
 create table if not exists nonces (nonce text primary key, created_at timestamptz not null default now());
+-- Ticker rename $HUNT → $HOODL (22 Oct 2026): carry old rows over; no-ops once done.
+update pools set asset = 'HOODL' where asset = 'HUNT' and not exists (select 1 from pools p2 where p2.epoch = pools.epoch and p2.asset = 'HOODL');
+delete from pools where asset = 'HUNT';
+update balances set asset = 'HOODL' where asset = 'HUNT' and not exists (select 1 from balances b2 where b2.player = balances.player and b2.asset = 'HOODL');
+update chests set asset = 'HOODL' where asset = 'HUNT';
 `;
 
 let ready;

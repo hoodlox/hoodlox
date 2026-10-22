@@ -15,7 +15,7 @@ const MARKUP = `
     <header class="gate__brand"><img class="brand__logo" src="/brand/logo-64.png" alt="" /><b>${BRAND}</b><small class="mono">Season 0 · <em>Free to play</em></small></header>
     <div class="gate__step gate__step--wallet">
       <h1 class="display">Dig. Open.<br />Earn.</h1>
-      <p>Find crates buried in the valley, dig them up and open them for ETH, $HUNT and tokenized stocks on Robinhood Chain. Connect a wallet to hunt, or look around first.</p>
+      <p>Find crates buried in the valley, dig them up and open them for ETH, $HOODL and tokenized stocks on Robinhood Chain. Connect a wallet to hunt, or look around first.</p>
       <button class="btn btn--primary gate__connect" type="button">Connect wallet</button>
       <button class="btn gate__guest" type="button">Look around as a guest</button>
       <p class="gate__err" role="alert" hidden></p>

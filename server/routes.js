@@ -264,7 +264,8 @@ const routes = {
   // Sends pending redeems and recovers stuck ones. Vercel cron / GitHub Actions call this.
   'GET /api/cron/payouts': async (ctx) => {
     if (config.cronSecret && ctx.headers.authorization !== `Bearer ${config.cronSecret}`) fail(401, 'Nope.');
-    await q(`update payouts set status = 'pending' where status = 'sending' and created_at < now() - interval '3 minutes' and signature is null`);
+    // No signature means nothing was broadcast (e.g. the vault was empty mid-migration): safe to resend.
+    await q(`update payouts set status = 'pending' where status in ('sending', 'failed') and created_at < now() - interval '3 minutes' and signature is null`);
     const stuck = await q(`select id, signature from payouts where status in ('sending', 'failed') and signature is not null and created_at < now() - interval '3 minutes'`);
     for (const s of stuck) {
       const state = await payoutState(s.signature);

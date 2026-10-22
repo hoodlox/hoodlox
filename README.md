@@ -77,6 +77,7 @@ All variables are listed in `.env.example`. More detail in `DEPLOY.md`.
 
 - This is a game server with a vault, not a contract. The server is trusted to roll fairly; tool payments and redeems are plain on-chain transfers anyone can check.
 - Between opening a chest and redeeming, rewards are database balances backed by the vault.
+- The pool is not locked: the team can withdraw or move the vault (e.g. for a migration) with `tools/vault-withdraw.mjs`. See `DEPLOY.md`.
 - A stock token can pause or block a recipient; that redeem fails and is retried by the cron until it goes through.
 - Positions are reported by the client every second; the server only checks a hunter is within 15 m of a crate, so movement itself is not anti-cheat.
 - Prices: ETH from CoinGecko, $HOODL and stocks from their deepest Robinhood Chain pools on DexScreener, cached one minute.

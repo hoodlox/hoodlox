@@ -10,3 +10,8 @@ dev-assets/
 
 .vercel
 .env*
+
+video/build/
+video/out/
+video/shots/
+video/probe/

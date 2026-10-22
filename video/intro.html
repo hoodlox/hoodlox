@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Hoodlox intro</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@500;700;800;900&family=JetBrains+Mono:wght@500;700&display=block" rel="stylesheet" />
+<style>
+  :root { --lime: #a6f25d; --cyan: #3fd6ff; --purple: #8b5cff; --gold: #f3c35a; --red: #ff5a5f; --bg: #0b0f20; --ink: #0d1a05; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #000; }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); color: #fff; font-family: Inter, sans-serif; }
+  #stage div, #stage img, #stage svg { position: absolute; }
+  .scene { position: absolute; inset: 0; display: none; }
+  .display { font-family: Anton, sans-serif; text-transform: uppercase; line-height: .9; letter-spacing: .01em; white-space: nowrap; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .grad { background: linear-gradient(100deg, var(--cyan), var(--lime) 70%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .sticker { font: 400 44px Anton, sans-serif; text-transform: uppercase; padding: 12px 26px 10px; border-radius: 16px; background: var(--lime); color: var(--ink); box-shadow: 0 8px 0 rgba(0,0,0,.35), 0 24px 50px rgba(0,0,0,.45); white-space: nowrap; }
+  .sticker.cyan { background: var(--cyan); color: #04202a; }
+  .sticker.gold { background: var(--gold); color: #2a1a00; }
+  .sticker.red { background: var(--red); color: #fff; }
+  .sticker.dark { background: #141a33; color: #fff; border: 3px solid var(--lime); }
+  .chip { font: 700 28px 'JetBrains Mono', monospace; padding: 14px 24px; border-radius: 999px; background: rgba(11,15,32,.88); border: 3px solid var(--lime); color: #fff; white-space: nowrap; display: flex; align-items: center; gap: 14px; }
+  .chip i { width: 14px; height: 14px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 6px rgba(166,242,93,.25); position: static; display: inline-block; }
+  .frame { border-radius: 26px; overflow: hidden; border: 4px solid rgba(255,255,255,.16); box-shadow: 0 34px 90px rgba(0,0,0,.65), 0 0 0 12px rgba(166,242,93,.07); background: #000; }
+  .frame img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; }
+  .full { left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; }
+  .shade { inset: 0; }
+  .key { width: 120px; height: 120px; border-radius: 22px; background: linear-gradient(#f4f6ff, #c9cfe6); color: #141a33; font: 400 64px Anton, sans-serif; display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 0 #6b7395, 0 26px 40px rgba(0,0,0,.5); }
+  .key.wide { width: 300px; font-size: 48px; }
+  .key.space { width: 520px; font-size: 44px; }
+  .label { font: 800 30px Inter, sans-serif; color: #fff; white-space: nowrap; text-shadow: 0 4px 20px rgba(0,0,0,.6); }
+  .label b { color: var(--lime); }
+  .eyebrow { font: 700 28px 'JetBrains Mono', monospace; color: var(--lime); letter-spacing: .12em; text-transform: uppercase; white-space: nowrap; }
+  .card { border-radius: 30px; overflow: hidden; box-shadow: 0 30px 70px rgba(0,0,0,.55); }
+  .card .pt { left: 50%; bottom: -10px; width: 120%; transform: translateX(-50%); }
+  .coin { width: 54px; height: 54px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff6c8, #f7cf4a 35%, #c98a12 75%); box-shadow: inset 0 0 0 5px rgba(150,95,0,.55), 0 6px 14px rgba(0,0,0,.35); }
+  .coin::after { content: '$'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: 900 28px Inter; color: rgba(120,70,0,.75); }
+  .rays { border-radius: 50%; background: repeating-conic-gradient(from 0deg, rgba(255,255,255,.22) 0 10deg, transparent 10deg 24deg); -webkit-mask: radial-gradient(circle, #000 20%, transparent 70%); mask: radial-gradient(circle, #000 20%, transparent 70%); }
+  .ring { border-radius: 50%; border: 10px solid var(--lime); }
+  .icon { stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .panel { border-radius: 30px; background: linear-gradient(160deg, #1a2142, #10142a); border: 3px solid rgba(255,255,255,.09); box-shadow: 0 30px 70px rgba(0,0,0,.5); }
+  #cap { left: 0; right: 0; bottom: 44px; display: flex; justify-content: center; pointer-events: none; }
+  #cap span.box { position: static; display: inline-block; font: 800 40px Inter, sans-serif; padding: 12px 30px 14px; border-radius: 18px; background: rgba(8,10,22,.82); color: #fff; letter-spacing: -.01em; max-width: 1600px; text-align: center; }
+  #cap em { font-style: normal; color: rgba(255,255,255,.45); }
+  #cap em.on { color: #fff; }
+  #cap em.now { color: var(--lime); }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script type="module">
+const TL = await (await fetch('/video/build/timeline.json')).json();
+const S = Object.fromEntries(TL.scenes.map((s) => [s.id, s]));
+const stage = document.getElementById('stage');
+const cues = [];
+
+// --- helpers ---------------------------------------------------------------------------------------
+const $ = (tag, cls, parent, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; (parent ?? stage).appendChild(e); return e; };
+const box = (el, x, y, w, h) => { el.style.left = `${x}px`; el.style.top = `${y}px`; if (w != null) el.style.width = `${w}px`; if (h != null) el.style.height = `${h}px`; return el; };
+const img = (src, cls, parent) => { const e = $('img', cls, parent); e.src = src; return e; };
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, p) => a + (b - a) * p;
+const E = { out: (p) => 1 - (1 - p) ** 3, inOut: (p) => (p < 0.5 ? 4 * p ** 3 : 1 - (-2 * p + 2) ** 3 / 2), lin: (p) => p };
+const prog = (lt, at, d = 0.5, e = E.out) => e(clamp((lt - at) / d));
+const spring = (k) => (k <= 0 ? 0 : 1 - Math.exp(-7 * k) * Math.cos(14 * k));
+const tf = (el, { x = 0, y = 0, s = 1, r = 0, o = 1, sx, sy }) => { el.style.transform = `translate(${x}px,${y}px) rotate(${r}deg) scale(${sx ?? s},${sy ?? s})`; el.style.opacity = o; };
+// Springy pop-in from nothing.
+const pop = (el, lt, at, { x = 0, y = 0, r = 0, from = 0, out = Infinity } = {}) => {
+  const k = lt - at, ko = lt - out;
+  const s = k <= 0 ? from : from + (1 - from) * spring(k);
+  const o = clamp(k / 0.08) * (ko > 0 ? clamp(1 - ko / 0.25) : 1);
+  tf(el, { x, y: y + (ko > 0 ? -40 * E.out(clamp(ko / 0.25)) : 0), s: ko > 0 ? s * (1 - 0.2 * clamp(ko / 0.25)) : s, r, o });
+};
+// Rubber-stamp slam: big → 1 with a jolt.
+const stamp = (el, lt, at, r = 0) => { const k = lt - at; tf(el, { s: k <= 0 ? 2 : 1 + 1.1 * Math.max(0, 1 - k / 0.16) ** 2, r, o: clamp(k / 0.05) }); };
+// Slide in from an offset.
+const slide = (el, lt, at, dx = 0, dy = 60, d = 0.55) => { const p = prog(lt, at, d); tf(el, { x: dx * (1 - p), y: dy * (1 - p), o: clamp((lt - at) / 0.2) }); };
+// Ken Burns: scale + drift over the scene.
+const kb = (el, lt, dur, { s0 = 1.12, s1 = 1, x0 = 0, x1 = 0, y0 = 0, y1 = 0 } = {}) => { const p = E.inOut(clamp(lt / dur)); tf(el, { s: lerp(s0, s1, p), x: lerp(x0, x1, p), y: lerp(y0, y1, p) }); };
+const svg = (paths, size, color, parent, sw = 2) => { const e = $('div', '', parent, `<svg class="icon" viewBox="0 0 24 24" width="${size}" height="${size}" style="position:static;color:${color};stroke-width:${sw}">${paths}</svg>`); return e; };
+const ICON = {
+  lock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  eyeoff: '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',
+  timer: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M10 2h4"/>',
+  link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+  trophy: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
+  wallet: '<path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>',
+  shovel: '<path d="M2 22v-5l5-5 5 5-5 5z"/><path d="M9.5 14.5 16 8"/><path d="m17 2 5 5-.5.5a3.53 3.53 0 0 1-5 0a3.53 3.53 0 0 1 0-5L17 2"/>',
+  pickaxe: '<path d="M14.531 12.469 6.619 20.38a1 1 0 1 1-3-3l7.912-7.912"/><path d="M15.686 4.314A12.5 12.5 0 0 0 5.461 2.958 1 1 0 0 0 5.58 4.71a22 22 0 0 1 6.318 3.393"/><path d="M17.7 3.7a1 1 0 0 0-1.4 0l-4.6 4.6a1 1 0 0 0 0 1.4l2.6 2.6a1 1 0 0 0 1.4 0l4.6-4.6a1 1 0 0 0 0-1.4z"/><path d="M19.686 8.314a12.5 12.5 0 0 1 1.356 10.225 1 1 0 0 1-1.751-.119 22 22 0 0 0-3.393-6.319"/>',
+  drill: '<path d="M10 18a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H5a3 3 0 0 1-3-3 1 1 0 0 1 1-1z"/><path d="M13 10H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1z"/><path d="m5 18 1.5-8"/><path d="M14 3.5h3l4 2.5-4 2.5h-3"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  vault: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="12" cy="12" r="4"/><path d="M12 8v1M12 15v1M8 12h1M15 12h1"/>',
+  bolt: '<path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>',
+};
+const SHOT = (n) => `/video/shots/${n}.png`;
+const CHEST = (r, open) => `/scenes/chests/icons/${r}-${open ? 'open' : 'closed'}.png`;
+const PORTRAIT = (h) => `/scenes/adventurers/portraits/${h}.png`;
+const RAR = [
+  { id: 'common', name: 'Common', odds: 55, weight: 1, color: '#b9c0cc' },
+  { id: 'uncommon', name: 'Uncommon', odds: 25, weight: 2.5, color: '#6fd68a' },
+  { id: 'rare', name: 'Rare', odds: 12, weight: 6, color: '#5aa8ff' },
+  { id: 'epic', name: 'Epic', odds: 6, weight: 15, color: '#c77dff' },
+  { id: 'legendary', name: 'Legendary', odds: 2, weight: 40, color: '#f3c35a' },
+];
+const HEROES = [
+  ['Knight', 'Knight', 'Vanguard', '#f06a54', 4.7], ['Ranger', 'Ranger', 'Tracker', '#52b04a', 4.5], ['Mage', 'Mage', 'Arcane', '#7c5cff', 4.8],
+  ['Rogue', 'Rogue', 'Scout', '#3a8df2', 4.4], ['Barbarian', 'Brute', 'Digger', '#f08a2c', 4.6], ['Rogue_Hooded', 'Shade', 'Stealth', '#7d8590', 4.3],
+];
+
+// Seeded randomness so every render of a frame is identical.
+const rng = (seed) => () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 2 ** 32);
+
+// Coin fountain: n coins thrown from (x, y); draw(k) with k = seconds since the throw.
+function burst(parent, n, x, y, seed, { spread = 1400, up = 1500, size = 1, life = 2.2 } = {}) {
+  const r = rng(seed);
+  const coins = Array.from({ length: n }, () => {
+    const el = box($('div', 'coin', parent), x - 27, y - 27);
+    return { el, vx: (r() - 0.5) * spread, vy: -up * (0.55 + 0.6 * r()), spin: (r() - 0.5) * 900, s: size * (0.6 + 0.6 * r()), d: r() * 0.12 };
+  });
+  return (k) => coins.forEach((c) => {
+    const t = k - c.d;
+    if (t < 0 || t > life) { c.el.style.opacity = 0; return; }
+    tf(c.el, { x: c.vx * t, y: c.vy * t + 1300 * t * t, r: c.spin * t, s: c.s, sx: c.s * Math.abs(Math.cos(t * 7 + c.d * 9)) + 0.15, o: clamp((life - t) / 0.4) });
+  });
+}
+// Sparkle dust drifting up.
+function dust(parent, n, seed, color = '#ffffff') {
+  const r = rng(seed);
+  const ps = Array.from({ length: n }, () => { const el = $('div', '', parent); const sz = 3 + r() * 6; el.style.cssText += `width:${sz}px;height:${sz}px;border-radius:50%;background:${color};box-shadow:0 0 12px ${color}`; return { el, x: r() * 1920, y: r() * 1080, v: 20 + r() * 50, ph: r() * 6 }; });
+  return (t) => ps.forEach((p) => { tf(p.el, { x: p.x + Math.sin(t * 0.8 + p.ph) * 30, y: ((p.y - p.v * t) % 1180 + 1180) % 1180 - 50, o: 0.25 + 0.35 * Math.sin(t * 2 + p.ph) ** 2 }); });
+}
+
+// --- background, wipes, captions ------------------------------------------------------------------
+const bg = $('div', '', stage); bg.style.inset = '0';
+bg.innerHTML = '';
+const bgGrad = box($('div', '', bg), 0, 0, 1920, 1080);
+bgGrad.style.background = 'radial-gradient(1200px 700px at 20% 10%, #1b2552, transparent), radial-gradient(1000px 700px at 90% 100%, #1d1446, transparent), #0b0f20';
+const grid = box($('div', '', bg), 0, 0, 1920, 1080);
+grid.style.cssText += 'background-image:linear-gradient(rgba(255,255,255,.045) 2px,transparent 2px),linear-gradient(90deg,rgba(255,255,255,.045) 2px,transparent 2px);background-size:80px 80px;';
+const blobA = box($('div', '', bg), 0, 0, 900, 900), blobB = box($('div', '', bg), 0, 0, 800, 800);
+blobA.style.cssText += 'border-radius:50%;background:radial-gradient(circle,rgba(166,242,93,.16),transparent 65%)';
+blobB.style.cssText += 'border-radius:50%;background:radial-gradient(circle,rgba(63,214,255,.16),transparent 65%)';
+const bgDust = dust(bg, 36, 99, '#bff58a');
+const drawBg = (t) => {
+  grid.style.backgroundPosition = `${t * 24}px ${t * 36}px`;
+  tf(blobA, { x: 200 + Math.sin(t * 0.3) * 300, y: -200 + Math.cos(t * 0.25) * 150 });
+  tf(blobB, { x: 1100 + Math.cos(t * 0.27) * 250, y: 400 + Math.sin(t * 0.33) * 160 });
+  bgDust(t);
+};
+
+const sceneLayer = $('div', '', stage); sceneLayer.style.inset = '0';
+
+// --- scenes ----------------------------------------------------------------------------------------
+const scenes = [];
+function scene(id, build) {
+  const s = S[id];
+  const el = $('div', 'scene', sceneLayer);
+  const w = (word, n = 0) => {
+    const lw = word.toLowerCase(), list = s.words;
+    let hits = list.filter((x) => x.w.toLowerCase().replace(/[^a-z0-9-]/g, '') === lw);
+    if (!hits.length) hits = list.filter((x) => x.w.toLowerCase().startsWith(lw));
+    if (!hits.length) throw new Error(`${id}: no word "${word}"`);
+    return hits[Math.min(n, hits.length - 1)].t;
+  };
+  const cue = (t, name, vol = 1, args) => cues.push({ t: +(s.start + t).toFixed(3), name, vol, args });
+  scenes.push({ ...s, el, draw: build(el, w, cue, s) });
+}
+
+// 1. Logo slam ------------------------------------------------------------------------------------
+scene('intro', (el, w, cue, s) => {
+  const rays = box($('div', 'rays', el), 960 - 900, 380 - 900, 1800, 1800);
+  const rings = [0, 1, 2].map(() => box($('div', 'ring', el), 960 - 200, 380 - 200, 400, 400));
+  const logo = img('/brand/logo-512.png', '', el); box(logo, 960 - 150, 230, 300, 300);
+  const word = $('div', '', el); box(word, 0, 560, 1920, 260);
+  word.style.cssText += 'display:flex;justify-content:center;gap:4px;';
+  const letters = [...'HOODLOX'].map((c) => { const l = $('div', 'display grad', word, c); l.style.cssText += 'position:relative;font-size:250px;filter:drop-shadow(0 14px 0 rgba(0,0,0,.35));'; return l; });
+  const tag = $('div', '', el); box(tag, 0, 845, 1920, 110); tag.style.cssText += 'display:flex;justify-content:center;gap:28px;';
+  const tags = ['DIG.', 'OPEN.', 'EARN.'].map((t, i) => { const e = $('div', 'sticker' + ['', ' cyan', ' gold'][i], tag, t); e.style.cssText += 'position:relative;font-size:64px;'; return e; });
+  const coinsA = burst(el, 34, 960, 380, 5, { spread: 2200, up: 1700 });
+  const coinsB = burst(el, 26, 960, 700, 11, { spread: 2600, up: 1500 });
+  const T = 2.0, hood = w('Hoodlox');
+  const tagAt = [hood + 0.45, hood + 0.7, hood + 0.95];
+  cue(0.15, 'riser', 0.7, [1.85]); cue(T, 'boom', 1); cue(T, 'sparkle', 0.5);
+  letters.forEach((_, i) => cue(T + 0.18 + i * 0.07, 'pop', 0.45, [1 + i * 0.08]));
+  cue(hood, 'whoosh', 0.5); cue(hood + 0.05, 'kaching', 0.55);
+  tagAt.forEach((t, i) => cue(t, 'stamp', 0.8));
+  return (lt) => {
+    const pre = clamp(lt / T);
+    tf(rays, { r: lt * 25, s: lt < T ? 0.2 : 1, o: lt < T ? 0 : 0.6 * clamp((lt - T) / 0.3) });
+    rings.forEach((r, i) => { const k = lt - T - i * 0.12; tf(r, { s: 0.3 + Math.max(0, k) * 5, o: k < 0 ? 0 : clamp(1 - k / 0.7) }); });
+    if (lt < T) tf(logo, { s: 0.15 + pre * 0.25, r: pre * 720, o: pre * 0.8, y: 120 * (1 - pre) });
+    else pop(logo, lt, T, { from: 0.4 });
+    const pulse = lt > hood ? 1 + 0.08 * Math.exp(-(lt - hood) * 6) * Math.sin((lt - hood) * 30) : 1;
+    word.style.transform = `scale(${pulse})`;
+    letters.forEach((l, i) => { const k = lt - (T + 0.18 + i * 0.07); tf(l, { y: k <= 0 ? -900 : -900 * (1 - spring(k)), r: k <= 0 ? -20 : -20 * (1 - spring(k)), o: k <= 0 ? 0 : 1 }); });
+    tags.forEach((e, i) => stamp(e, lt, tagAt[i], [-4, 2, -2][i]));
+    coinsA(lt - T); coinsB(lt - tagAt[2]);
+  };
+});
+
+// 2. The valley -----------------------------------------------------------------------------------
+scene('world', (el, w, cue, s) => {
+  const a = img(SHOT('world-crowd'), 'full', el), b = img(SHOT('world-high'), 'full', el);
+  const shade = $('div', 'shade', el); shade.style.background = 'linear-gradient(90deg, rgba(8,10,24,.88) 0%, rgba(8,10,24,.55) 38%, transparent 62%), linear-gradient(0deg, rgba(8,10,24,.7), transparent 30%)';
+  const chain = box($('div', 'chip', el, '<i></i>ROBINHOOD CHAIN · EVM 4663'), 110, 170);
+  const t1 = box($('div', 'display', el, 'One shared'), 110, 250); t1.style.fontSize = '150px';
+  const t2 = box($('div', 'display grad', el, '3D valley'), 110, 395); t2.style.fontSize = '170px';
+  const chips = [['together', 'MULTIPLAYER'], ['live', 'LIVE'], ['browser', 'IN YOUR BROWSER'], ['desktop', 'DESKTOP'], ['mobile', 'MOBILE']];
+  const chipEls = chips.map(([, t], i) => box($('div', 'chip', el, `<i></i>${t}`), 110 + (i % 3) * 0 , 600 + i * 0));
+  // Lay chips out in two rows.
+  const pos = [[110, 610], [430, 610], [640, 610], [110, 700], [370, 700]];
+  chipEls.forEach((c, i) => box(c, ...pos[i]));
+  const phone = box($('div', 'frame', el), 1460, 1100, 330, 700); phone.style.borderRadius = '48px'; phone.style.border = '10px solid #1b2033';
+  img('/video/shots/phone.png', '', phone);
+  const at = chips.map(([word]) => w(word));
+  cue(w('Robinhood'), 'pop', 0.5); cue(w('One'), 'stamp', 0.7); cue(w('3D') + 0.05, 'whoosh', 0.4);
+  at.forEach((t) => cue(t, 'pop', 0.45, [1.2]));
+  cue(w('mobile') - 0.2, 'swish', 0.5);
+  const swap = w('where');
+  return (lt) => {
+    kb(a, lt, s.dur, { s0: 1.18, s1: 1.04, x0: 60, x1: -40 });
+    kb(b, lt - swap, s.dur - swap, { s0: 1.12, s1: 1.0, x0: -30, x1: 30 }); b.style.opacity = prog(lt, swap, 0.6);
+    pop(chain, lt, w('Robinhood'), { from: 0.5 });
+    stamp(t1, lt, w('One'), -2); slide(t2, lt, w('3D') - 0.1, -120, 0, 0.45);
+    chipEls.forEach((c, i) => pop(c, lt, at[i], { from: 0.3 }));
+    const pk = lt - (w('mobile') - 0.2); tf(phone, { y: pk <= 0 ? 0 : -830 * spring(pk * 0.8), r: 6 - 4 * clamp(pk), o: pk > 0 ? 1 : 0 });
+  };
+});
+
+// 3. Getting started ------------------------------------------------------------------------------
+scene('gate', (el, w, cue) => {
+  const ey = box($('div', 'eyebrow', el, 'Get started'), 110, 190);
+  const t = box($('div', 'display', el, 'In <span class="grad">seconds</span>'), 110, 240); t.style.fontSize = '140px';
+  const steps = [['Connect', 'Connect wallet'], ['pick', 'Pick your hero'], ['give', 'Name your hunter']].map(([word, txt], i) => {
+    const row = box($('div', '', el), 110, 450 + i * 130, 640, 104);
+    const n = box($('div', 'display', row, String(i + 1)), 0, 0, 104, 104);
+    n.style.cssText += `border-radius:50%;background:${['var(--lime)', 'var(--cyan)', 'var(--gold)'][i]};color:#0b0f20;font-size:64px;display:flex;align-items:center;justify-content:center;`;
+    box($('div', 'label', row, txt), 134, 30).style.fontSize = '42px';
+    return { row, at: w(word) };
+  });
+  const fr = box($('div', 'frame', el), 860, 150, 960, 540);
+  const g1 = img(SHOT('gate-wallet'), '', fr), g2 = img(SHOT('gate-heroes'), '', fr);
+  steps.forEach((s, i) => { cue(s.at, 'pop', 0.55, [1 + i * 0.15]); });
+  cue(0.4, 'swish', 0.5); cue(w('pick'), 'click', 0.6);
+  return (lt) => {
+    slide(ey, lt, 0.2, 0, 30); stamp(t, lt, 0.35, -2);
+    steps.forEach((s) => slide(s.row, lt, s.at - 0.05, -120, 0, 0.4));
+    const p = prog(lt, 0.3, 0.7);
+    fr.style.transform = `perspective(1600px) rotateY(${-14 * (1 - p) - 6}deg) translateX(${300 * (1 - p)}px) scale(${0.95 + 0.05 * p})`; fr.style.opacity = p;
+    g2.style.opacity = prog(lt, w('pick'), 0.4);
+    kb(g1, lt, 4, { s0: 1.6, s1: 1.75 });
+    kb(g2, lt - w('pick'), 4, { s0: 1.75, s1: 1.95, y0: 60, y1: 110 });
+  };
+});
+
+// 4. Heroes ---------------------------------------------------------------------------------------
+scene('heroes', (el, w, cue) => {
+  const t = box($('div', 'display', el, 'Six <span class="grad">hunters</span>'), 0, 110, 1920); t.style.cssText += 'font-size:120px;text-align:center;';
+  const cards = HEROES.map(([file, name, side, color, rate], i) => {
+    const c = box($('div', 'card', el), 75 + i * 300, 330, 270, 420);
+    c.style.background = `radial-gradient(circle at 50% 30%, rgba(255,255,255,.35), transparent 60%), ${color}`;
+    img(PORTRAIT(file), 'pt', c);
+    box($('div', 'mono', c, side.toUpperCase()), 22, 20).style.cssText += 'font-size:18px;font-weight:700;color:rgba(255,255,255,.75);letter-spacing:.1em;';
+    box($('div', 'display', c, name), 22, 46).style.cssText += 'font-size:60px;text-shadow:0 4px 0 rgba(0,0,0,.25);';
+    box($('div', 'mono', c, `★ ${rate}`), 180, 22).style.cssText += 'font-size:20px;font-weight:700;background:rgba(255,255,255,.9);color:#141a33;padding:4px 10px;border-radius:999px;';
+    return { c, at: w(name) - 0.12 };
+  });
+  cue(w('Six'), 'stamp', 0.6);
+  cards.forEach((c, i) => { cue(c.at, 'whoosh', 0.35, [0.3]); cue(c.at + 0.12, 'pop', 0.6, [0.9 + i * 0.1]); });
+  return (lt) => {
+    stamp(t, lt, w('Six'));
+    cards.forEach((c, i) => {
+      const k = lt - c.at, next = cards[i + 1]?.at ?? c.at + 0.9;
+      const hi = lt >= c.at && lt < next ? 1 + 0.08 * Math.sin(clamp((lt - c.at) / (next - c.at)) * Math.PI) : 1;
+      const sp = spring(k);
+      tf(c.c, { y: k <= 0 ? 800 : 800 * (1 - sp) - 30 * (hi - 1) * 10, r: k <= 0 ? 25 : 25 * (1 - sp) + Math.sin(lt * 2 + i) * 1.2, s: hi, o: k > 0 ? 1 : 0 });
+      c.c.style.boxShadow = hi > 1 ? `0 0 0 6px var(--lime), 0 30px 70px rgba(0,0,0,.55)` : '';
+    });
+  };
+});
+
+// 5. Controls -------------------------------------------------------------------------------------
+scene('controls', (el, w, cue, s) => {
+  const fr = box($('div', 'frame', el), 900, 150, 920, 518);
+  const tp = img(SHOT('world-side'), '', fr), fp = img(SHOT('world-fp'), '', fr);
+  const view = box($('div', 'sticker cyan', el, '3rd person'), 1500, 110); view.style.fontSize = '36px';
+  const key = (txt, x, y, cls = '') => box($('div', 'key ' + cls, el, txt), x, y);
+  const W = key('W', 230, 150), A = key('A', 100, 285), Sk = key('S', 230, 285), D = key('D', 360, 285);
+  const joy = box($('div', '', el), 560, 175, 220, 220);
+  joy.style.cssText += 'border-radius:50%;background:rgba(255,255,255,.12);border:4px solid rgba(255,255,255,.35);';
+  const knob = box($('div', '', joy), 55, 55, 104, 104); knob.style.cssText += 'border-radius:50%;background:radial-gradient(circle at 40% 35%, #e9ffd4, var(--lime));box-shadow:0 10px 24px rgba(0,0,0,.4);';
+  const moveL = box($('div', 'label', el, '<b>MOVE</b> · keys or joystick'), 100, 440);
+  const shift = key('SHIFT', 100, 530, 'wide'), run = box($('div', 'display', el, 'RUN'), 430, 530, 120, 120);
+  run.style.cssText += 'border-radius:50%;background:var(--lime);color:var(--ink);font-size:44px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 0 #4c7a1f;';
+  const runL = box($('div', 'label', el, '<b>SPRINT</b>'), 590, 568);
+  const space = key('SPACE', 100, 700, 'space'), jumpL = box($('div', 'label', el, '<b>JUMP</b>'), 660, 738);
+  const v = key('V', 900, 700), vL = box($('div', 'label', el, '<b>3RD ↔ 1ST</b> person view'), 1050, 738);
+  const keys = [[W, 'W'], [A, 'A'], [Sk, 'S'], [D, 'D']].map(([k, word]) => ({ k, at: w(word) }));
+  const tJoy = w('joystick'), tShift = w('shift'), tRun = w('run'), tSpace = w('Space'), tV = w('V'), tFirst = w('first');
+  keys.forEach((k) => cue(k.at, 'key', 0.8));
+  cue(tJoy, 'pop', 0.5); cue(tShift, 'key', 0.8); cue(tRun, 'click', 0.7); cue(tSpace, 'key', 0.8); cue(tSpace + 0.2, 'swish', 0.4); cue(tV, 'key', 0.8); cue(tFirst, 'whoosh', 0.5);
+  const press = (k, lt, at) => { pop(k, lt, at - 0.15, { from: 0.4 }); const d = lt - at; if (d > 0 && d < 0.22) k.style.transform += ` translateY(${10 * Math.sin((d / 0.22) * Math.PI)}px)`; };
+  return (lt) => {
+    const p = prog(lt, 0.2, 0.6); tf(fr, { x: 200 * (1 - p), o: p }); kb(tp, lt, s.dur, { s0: 1.05, s1: 1.15 });
+    fp.style.opacity = prog(lt, tFirst, 0.35); kb(fp, lt - tFirst, 3, { s0: 1.1, s1: 1.0 });
+    view.textContent = lt >= tFirst ? '1st person' : '3rd person'; pop(view, lt, 0.5, { from: 0.6 }); if (lt > tFirst) stamp(view, lt, tFirst, 3);
+    keys.forEach(({ k, at }) => press(k, lt, at));
+    pop(joy, lt, tJoy - 0.1); const ang = lt * 3; tf(knob, { x: lt > tJoy ? Math.cos(ang) * 55 : 0, y: lt > tJoy ? Math.sin(ang) * 55 : 0 });
+    slide(moveL, lt, keys[3].at, -60, 0, 0.4);
+    press(shift, lt, tShift); press(run, lt, tRun); slide(runL, lt, tRun, -60, 0, 0.4);
+    press(space, lt, tSpace); slide(jumpL, lt, tSpace, -60, 0, 0.4);
+    press(v, lt, tV); slide(vL, lt, tV, -60, 0, 0.4);
+  };
+});
+
+// 6. Epochs ---------------------------------------------------------------------------------------
+scene('epoch', (el, w, cue) => {
+  const ring = $('div', '', el, `<svg width="520" height="520" style="position:static"><circle cx="260" cy="260" r="230" stroke="rgba(255,255,255,.1)" stroke-width="26" fill="none"/><circle class="arc" cx="260" cy="260" r="230" stroke="url(#g)" stroke-width="26" fill="none" stroke-linecap="round" transform="rotate(-90 260 260)" stroke-dasharray="1445" stroke-dashoffset="0"/><defs><linearGradient id="g"><stop offset="0" stop-color="#3fd6ff"/><stop offset="1" stop-color="#a6f25d"/></linearGradient></defs></svg>`);
+  box(ring, 140, 220, 520, 520);
+  const arc = ring.querySelector('.arc');
+  const clock = box($('div', 'display', el, '2:00:00'), 140, 400, 520); clock.style.cssText += 'font-size:120px;text-align:center;';
+  const sub = box($('div', 'eyebrow', el, 'Every 2 hours'), 140, 540, 520); sub.style.textAlign = 'center';
+  const badge = box($('div', 'sticker', el, 'New epoch!'), 240, 760);
+  const map = box($('div', 'frame', el), 800, 160, 1020, 600);
+  const mi = img('/landing/valley.jpg', '', map);
+  const crates = box($('div', '', map), 0, 0, 1020, 600);
+  const r = rng(31), mix = ['common', 'common', 'uncommon', 'common', 'rare', 'common', 'uncommon', 'common', 'epic', 'common', 'common', 'uncommon', 'rare', 'common', 'uncommon', 'common', 'common', 'legendary', 'uncommon', 'common', 'rare', 'common', 'uncommon', 'common', 'common'];
+  const items = mix.map((rar, i) => ({ el: box(img(CHEST(rar), '', crates), 40 + r() * 900, 60 + r() * 460, 74, 74), i }));
+  const old = Array.from({ length: 7 }, () => { const e = box(img(CHEST('common'), '', crates), 40 + r() * 900, 60 + r() * 460, 64, 64); e.style.filter = 'grayscale(1) brightness(.7)'; return e; });
+  const count = box($('div', 'sticker dark', el, '0 crates'), 1500, 700); count.style.fontSize = '48px';
+  const tNew = w('epoch'), tTw = w('Twenty'), tGone = w('disappears');
+  cue(0.3, 'tick', 0.5); cue(0.8, 'tick', 0.5); cue(1.3, 'tick', 0.5); cue(1.8, 'tick', 0.5);
+  cue(tNew, 'stamp', 0.8); cue(tNew + 0.05, 'ding', 0.4, [1.5]);
+  items.forEach((it, i) => { if (i % 3 === 0) cue(tTw + i * 0.06, 'pop', 0.3, [1 + (i % 7) * 0.08]); });
+  cue(tGone, 'poof', 0.8); cue(tGone + 0.12, 'poof', 0.5);
+  return (lt) => {
+    pop(ring, lt, 0.1, { from: 0.6 }); pop(clock, lt, 0.15, { from: 0.6 }); slide(sub, lt, 0.4, 0, 30);
+    const secs = Math.max(0, 7200 - Math.max(0, lt - 0.3) * 760);
+    clock.textContent = `${Math.floor(secs / 3600)}:${String(Math.floor(secs / 60) % 60).padStart(2, '0')}:${String(Math.floor(secs) % 60).padStart(2, '0')}`;
+    if (lt > tNew) clock.textContent = '2:00:00';
+    arc.setAttribute('stroke-dashoffset', String(lt > tNew ? 1445 * (1 - prog(lt, tNew, 0.6)) * 0 : 1445 * (1 - secs / 7200)));
+    stamp(badge, lt, tNew, -4);
+    const mp = prog(lt, 0.25, 0.7); map.style.transform = `perspective(1800px) rotateX(${18 * (1 - mp) + 8}deg) translateY(${120 * (1 - mp)}px)`; map.style.opacity = mp;
+    kb(mi, lt, 10, { s0: 1.05, s1: 1.15 });
+    let shown = 0;
+    items.forEach((it, i) => { const at = tTw + i * 0.06; if (lt > at) shown++; pop(it.el, lt, at); it.el.style.transform += ` translateY(${Math.sin(lt * 3 + i) * 4}px)`; });
+    old.forEach((o, i) => { const k = lt - (tGone + (i % 2) * 0.12); tf(o, { s: k < 0 ? 1 : 1 + k * 3, o: k < 0 ? 0.85 : clamp(1 - k / 0.25) }); });
+    count.textContent = `${shown} crates`; pop(count, lt, tTw - 0.1, { from: 0.5 });
+  };
+});
+
+// 7. Find a crate ---------------------------------------------------------------------------------
+scene('crate', (el, w, cue, s) => {
+  const FX = 1085, FY = 470; // the half-sunk chest in shots/crate.png
+  const a = img(SHOT('crate'), 'full', el);
+  const dark = $('div', 'shade', el);
+  const ring = box($('div', 'ring', el), FX - 110, FY - 110, 220, 220);
+  const tagE = box($('div', 'sticker gold', el, 'Half sunk = crate!'), FX + 150, FY - 210);
+  const ek = box($('div', 'key', el, 'E'), 800, 760); const ekL = box($('div', 'label', el, '<b>PRESS E</b> to dig'), 950, 795); ekL.style.fontSize = '44px';
+  const tChest = w('chest'), tHalf = w('half'), tE = w('E');
+  cue(w('Keep'), 'swish', 0.5); cue(tChest, 'ding', 0.5, [1.2]); cue(tHalf, 'pop', 0.6); cue(tE, 'key', 0.9); cue(tE + 0.35, 'dig', 0.7);
+  return (lt) => {
+    // Push in on the chest.
+    const p = E.inOut(clamp(lt / s.dur)), sc = lerp(1.0, 1.35, p);
+    tf(a, { s: sc, x: (960 - FX) * (sc - 1) * 0.9, y: (540 - FY) * (sc - 1) * 0.9 });
+    const sp = prog(lt, tChest - 0.3, 0.5);
+    const fx = FX + (960 - FX) * (sc - 1) * 0.9 + (FX - 960) * (sc - 1), fy = FY + (540 - FY) * (sc - 1) * 0.9 + (FY - 540) * (sc - 1);
+    dark.style.background = `radial-gradient(circle 260px at ${fx}px ${fy}px, transparent 55%, rgba(5,8,20,${0.72 * sp}) 100%)`;
+    box(ring, fx - 110, fy - 110); tf(ring, { s: 0.8 + 0.25 * Math.sin(lt * 6) ** 2, o: sp });
+    box(tagE, fx + 140, fy - 220); pop(tagE, lt, tHalf, { r: -5 });
+    pop(ek, lt, tE - 0.1); slide(ekL, lt, tE, -40, 0, 0.35);
+  };
+});
+
+// 8. One digger per crate -------------------------------------------------------------------------
+scene('dig', (el, w, cue, s) => {
+  const a = img(SHOT('dig'), 'full', el);
+  const shade = $('div', 'shade', el); shade.style.background = 'linear-gradient(90deg, rgba(8,10,24,.85), rgba(8,10,24,.35) 45%, transparent 70%)';
+  const badge = box($('div', 'panel', el), 110, 200, 640, 230);
+  const lk = svg(ICON.lock, 120, 'var(--lime)', badge, 2.4); box(lk, 40, 55);
+  box($('div', 'display', badge, '1 crate<br><span class="grad">1 digger</span>'), 200, 40).style.fontSize = '76px';
+  const s1 = box($('div', 'sticker red', el, 'No fighting'), 130, 490), s2 = box($('div', 'sticker red', el, 'No stealing'), 430, 560);
+  const s3 = box($('div', 'sticker', el, 'First claim keeps it ✓'), 130, 680);
+  const bar = box($('div', '', el), 780, 868, 360, 72); bar.style.cssText += 'border-radius:16px;border:5px solid var(--lime);box-shadow:0 0 30px var(--lime);';
+  const tOne = w('one'), tF = w('fighting'), tS = w('stealing'), tW = w('Whoever');
+  cue(0.1, 'dig', 0.6); cue(1.4, 'dig', 0.45); cue(tOne, 'lock', 0.9); cue(tF, 'stamp', 0.8); cue(tS, 'stamp', 0.8); cue(tW + 0.2, 'coin', 0.6);
+  return (lt) => {
+    kb(a, lt, s.dur, { s0: 1.0, s1: 1.1, y0: 0, y1: -20 });
+    slide(badge, lt, tOne - 0.15, -200, 0, 0.45); pop(lk, lt, tOne + 0.1);
+    stamp(s1, lt, tF, -6); stamp(s2, lt, tS, 4); pop(s3, lt, tW + 0.2, { r: -2 });
+    tf(bar, { o: lt > 0.5 ? 0.5 + 0.5 * Math.sin(lt * 5) ** 2 : 0, s: 1 + 0.02 * Math.sin(lt * 5) });
+  };
+});
+
+// 9. Tools ----------------------------------------------------------------------------------------
+scene('tools', (el, w, cue) => {
+  const t = box($('div', 'display', el, 'Faster tool, <span class="grad">faster dig</span>'), 0, 70, 1920); t.style.cssText += 'font-size:110px;text-align:center;';
+  const defs = [
+    ['Rusty', 'Rusty Shovel', ICON.shovel, 60, 'free', 'FREE', '#b9c0cc', ''],
+    ['Iron', 'Iron Pickaxe', ICON.pickaxe, 30, 'zero', '0.1% SUPPLY', '#5aa8ff', ''],
+    ['Golden', 'Golden Drill', ICON.drill, 15, 'zero', '0.2% SUPPLY', '#f3c35a', 'gold'],
+  ];
+  let zeros = 0;
+  const cards = defs.map(([word, name, icon, secs, priceWord, price, color, kind], i) => {
+    const c = box($('div', 'panel', el), 110 + i * 580, 260, 540, 560);
+    if (kind === 'gold') { c.style.borderColor = 'rgba(243,195,90,.7)'; c.style.background = 'linear-gradient(160deg, #3a2e10, #141a33 60%)'; }
+    const ic = svg(icon, 150, color, c, 1.8); box(ic, 40, 40);
+    box($('div', 'display', c, name), 40, 225).style.fontSize = '62px';
+    const time = box($('div', 'display', c, `${secs}s`), 360, 50); time.style.cssText += `font-size:110px;color:${color};`;
+    const track = box($('div', '', c), 40, 330, 460, 34); track.style.cssText += 'border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;';
+    const fill = box($('div', '', track), 0, 0, 460, 34); fill.style.cssText += `border-radius:999px;background:${color};transform-origin:left;`;
+    box($('div', 'mono', c, 'dig time'), 40, 376).style.cssText += 'font-size:22px;color:rgba(255,255,255,.55);';
+    const pr = box($('div', 'sticker' + (i === 0 ? '' : i === 1 ? ' cyan' : ' gold'), c, price), 40, 440); pr.style.fontSize = '46px';
+    const ribbon = kind === 'gold' ? box($('div', 'sticker red', el, 'Fastest!'), 110 + i * 580 + 330, 225) : null;
+    const pAt = priceWord === 'zero' ? w('zero', zeros++) : w(priceWord);
+    return { c, fill, pr, secs, at: w(word) - 0.1, pAt, ribbon };
+  });
+  cue(w('tool'), 'swish', 0.5);
+  cards.forEach((c, i) => { cue(c.at, 'whoosh', 0.4, [0.35]); cue(c.at + 0.1, 'pop', 0.6, [0.9 + i * 0.15]); cue(c.pAt, i === 0 ? 'coin' : 'stamp', 0.6); });
+  cue(cards[2].at + 0.6, 'sparkle', 0.4);
+  const tPaid = w('paid'); cue(tPaid, 'kaching', 0.7);
+  const hood = box($('div', 'chip', el, '<i></i>All paid in $HOODL'), 760, 860); hood.style.fontSize = '34px';
+  return (lt) => {
+    stamp(t, lt, 0.3, -1);
+    cards.forEach((c, i) => {
+      pop(c.c, lt, c.at, { from: 0.5, y: 0 });
+      // Dig bars loop at real relative speed: the drill fills 4× faster than the shovel.
+      const k = Math.max(0, lt - c.at - 0.3), cyc = c.secs / 15 * 1.6;
+      c.fill.style.transform = `scaleX(${lt > c.at + 0.3 ? (k % cyc) / cyc : 0})`;
+      stamp(c.pr, lt, c.pAt, -3);
+      if (c.ribbon) pop(c.ribbon, lt, c.at + 0.5, { r: 8 });
+    });
+    pop(hood, lt, tPaid - 0.1, { from: 0.4 });
+  };
+});
+
+// 10. Rarities ------------------------------------------------------------------------------------
+scene('rarity', (el, w, cue) => {
+  const t = box($('div', 'display', el, '5 <span class="grad">rarities</span>'), 0, 90, 1920); t.style.cssText += 'font-size:120px;text-align:center;';
+  const rays = box($('div', 'rays', el), 1660 - 500, 470 - 500, 1000, 1000);
+  const items = RAR.map((r, i) => {
+    const g = box($('div', '', el), 90 + i * 350, 300, 340, 520);
+    const glow = box($('div', '', g), 0, 0, 340, 340); glow.style.cssText += `border-radius:50%;background:radial-gradient(circle, ${r.color}88, transparent 65%);`;
+    const ch = box(img(CHEST(r.id), '', g), 0, 0, 340, 340);
+    const nm = box($('div', 'display', g, r.name), 0, 320, 340); nm.style.cssText += `font-size:${r.id === 'legendary' ? 64 : 56}px;text-align:center;color:${r.color};`;
+    const od = box($('div', 'mono', g, `${r.odds}%`), 0, 400, 340); od.style.cssText += 'font-size:34px;font-weight:700;text-align:center;color:rgba(255,255,255,.75);';
+    return { g, glow, ch, at: w(r.name) - 0.08, leg: r.id === 'legendary' };
+  });
+  const coins = burst(el, 30, 1660, 450, 21, { spread: 1800, up: 1600 });
+  cue(w('five'), 'stamp', 0.6);
+  items.forEach((it, i) => { if (it.leg) { cue(it.at, 'fanfare', 0.75); cue(it.at, 'boom', 0.5); } else cue(it.at, 'ding', 0.5, [0.8 + i * 0.18]); cue(it.at, 'pop', 0.4, [1 + i * 0.1]); });
+  const leg = items[4].at;
+  return (lt) => {
+    stamp(t, lt, w('five') - 0.1);
+    items.forEach((it, i) => {
+      const k = lt - it.at;
+      const sc = it.leg ? 1.18 : (lt > leg ? 0.92 : 1);
+      tf(it.g, { y: k <= 0 ? 500 : 500 * (1 - spring(k)) + Math.sin(lt * 2.5 + i) * 8, s: sc, o: k > 0 ? (lt > leg && !it.leg ? 0.6 : 1) : 0 });
+      tf(it.glow, { s: 0.9 + 0.15 * Math.sin(lt * 4 + i), o: 0.9 });
+    });
+    tf(rays, { r: lt * 30, o: lt > leg ? 0.8 * prog(lt, leg, 0.3) : 0, s: lt > leg ? 0.6 + 0.4 * prog(lt, leg, 0.5) : 0 });
+    coins(lt - leg - 0.1);
+  };
+});
+
+// 11. Open a chest --------------------------------------------------------------------------------
+scene('open', (el, w, cue) => {
+  const back = img(SHOT('bag'), 'full', el); back.style.filter = 'brightness(.35) blur(2px)';
+  const rays = box($('div', 'rays', el), 960 - 700, 470 - 700, 1400, 1400);
+  const closed = box(img(CHEST('epic'), '', el), 960 - 230, 470 - 230, 460, 460), opened = box(img(CHEST('epic', true), '', el), 960 - 230, 470 - 230, 460, 460);
+  const flash = $('div', 'shade', el); flash.style.background = '#fff';
+  const lbl = box($('div', 'sticker cyan', el, 'Open from your inventory'), 0, 120, 1920); lbl.style.cssText += 'width:auto;left:50%;transform-origin:center;';
+  const coins = burst(el, 36, 960, 480, 41, { spread: 2400, up: 1800 });
+  const tOpen = w('see') - 0.1;
+  cue(0.3, 'creak', 0.5); cue(w('inventory'), 'pop', 0.6); cue(tOpen, 'chest', 0.9); cue(tOpen, 'boom', 0.45); cue(tOpen + 0.1, 'kaching', 0.6);
+  return (lt) => {
+    kb(back, lt, 4, { s0: 1.1, s1: 1.0 });
+    const shake = lt < tOpen ? Math.sin(lt * 40) * 6 * clamp((lt - 0.3) / 1.5) : 0;
+    pop(closed, lt, 0.05, { r: shake }); closed.style.opacity = lt < tOpen ? 1 : 0;
+    pop(opened, lt, tOpen, { from: 0.85 }); opened.style.opacity = lt >= tOpen ? 1 : 0;
+    flash.style.opacity = lt >= tOpen ? clamp(1 - (lt - tOpen) / 0.35) * 0.85 : 0;
+    tf(rays, { r: lt * 40, o: lt > tOpen ? 0.9 : 0, s: lt > tOpen ? 0.7 + 0.3 * prog(lt, tOpen, 0.4) : 0 });
+    const k = lt - w('inventory') + 0.3; lbl.style.transform = `translateX(-50%) scale(${k <= 0 ? 0 : spring(k)})`; lbl.style.opacity = k > 0 ? 1 : 0;
+    coins(lt - tOpen);
+  };
+});
+
+// 12. Rewards -------------------------------------------------------------------------------------
+scene('rewards', (el, w, cue) => {
+  const t = box($('div', 'display', el, 'Real <span class="grad">rewards</span>'), 0, 70, 1920); t.style.cssText += 'font-size:120px;text-align:center;';
+  const row = box($('div', '', el), 0, 0, 1920, 1080);
+  const token = (x, html, bgc, size = 230) => { const e = box($('div', '', row, html), x, 290, size, size); e.style.cssText += `border-radius:50%;background:${bgc};display:flex;align-items:center;justify-content:center;flex-direction:column;box-shadow:0 0 0 8px rgba(255,255,255,.08),0 24px 50px rgba(0,0,0,.5);`; return e; };
+  const eth = token(160, '<svg viewBox="0 0 24 24" width="110" height="110" style="position:static"><path d="M12 1 4.5 12.3 12 16.8l7.5-4.5z" fill="#fff"/><path d="M12 18.2 4.5 13.8 12 23l7.5-9.2z" fill="#dfe3ff"/></svg>', 'linear-gradient(140deg,#7b8cff,#4b55c9)');
+  const hoodl = token(450, '<img src="/brand/logo-180.png" style="position:static;width:150px;height:150px">', 'linear-gradient(140deg,#1d2a4a,#0f1530)');
+  const names = [box($('div', 'display', row, 'ETH'), 160, 540, 230), box($('div', 'display', row, '$HOODL'), 450, 540, 230)];
+  names.forEach((n) => { n.style.cssText += 'font-size:56px;text-align:center;'; });
+  const stocks = [['Tesla', 'TSLA', '#e8473a'], ['Nvidia', 'NVDA', '#76b900'], ['Apple', 'AAPL', '#cfd4dc'], ['S', 'SPY', '#3fd6ff']].map(([word, tk, c], i) => {
+    const e = box($('div', 'panel', row), 790 + i * 270, 305, 240, 200);
+    box($('div', 'display', e, tk), 0, 46, 240).style.cssText += `font-size:72px;text-align:center;color:${c};`;
+    box($('div', 'mono', e, 'stock token'), 0, 140, 240).style.cssText += 'font-size:20px;text-align:center;color:rgba(255,255,255,.6);';
+    return { e, at: w(word) - 0.08 };
+  });
+  const stockL = box($('div', 'eyebrow', row, 'Tokenized stocks on Robinhood Chain'), 790, 540);
+  // Pool share: rarer chests take a bigger cut (weights 1 / 2.5 / 6 / 15 / 40).
+  const pool = box($('div', 'panel', el), 210, 620, 1500, 330);
+  box($('div', 'eyebrow', pool, 'Share of the epoch pool per chest'), 40, 28);
+  const bars = RAR.map((r, i) => {
+    const y = 80 + i * 46;
+    box(img(CHEST(r.id), '', pool), 40, y - 6, 44, 44);
+    box($('div', 'mono', pool, r.name), 96, y + 4).style.cssText += 'font-size:22px;font-weight:700;';
+    const b = box($('div', '', pool), 290, y + 2, 1000 * r.weight / 40, 30); b.style.cssText += `border-radius:8px;background:${r.color};transform-origin:left;`;
+    const x = box($('div', 'mono', pool, `×${r.weight}`), 300 + 1000 * r.weight / 40, y + 2); x.style.cssText += 'font-size:24px;font-weight:700;';
+    return { b, x };
+  });
+  const tEth = w('Eth'), tHood = w('Hoodle'), tEvery = w('Every'), tRare = w('rarer');
+  cue(w('real'), 'stamp', 0.6); cue(tEth, 'coin', 0.6); cue(tHood, 'coin', 0.6);
+  stocks.forEach((s, i) => cue(s.at, 'pop', 0.5, [1 + i * 0.12]));
+  cue(tEvery, 'whoosh', 0.5); bars.forEach((_, i) => cue(tRare + i * 0.12, 'pop', 0.35, [0.8 + i * 0.15]));
+  return (lt) => {
+    stamp(t, lt, w('real') - 0.15);
+    pop(eth, lt, tEth - 0.1); pop(hoodl, lt, tHood - 0.1); slide(names[0], lt, tEth, 0, 30, 0.3); slide(names[1], lt, tHood, 0, 30, 0.3);
+    [eth, hoodl].forEach((e, i) => { e.style.transform += ` translateY(${Math.sin(lt * 2.4 + i) * 8}px)`; });
+    stocks.forEach((s) => pop(s.e, lt, s.at, { r: 0 })); slide(stockL, lt, stocks[0].at + 0.3, 0, 20, 0.4);
+    const up = prog(lt, tEvery - 0.2, 0.6); row.style.transform = `translateY(${-90 * up}px) scale(${1 - 0.12 * up})`; row.style.transformOrigin = '50% 0';
+    slide(pool, lt, tEvery - 0.1, 0, 300, 0.6);
+    bars.forEach((b, i) => { const p = prog(lt, tRare + i * 0.12, 0.5); b.b.style.transform = `scaleX(${p})`; b.x.style.opacity = p; });
+  };
+});
+
+// 13. Redeem --------------------------------------------------------------------------------------
+scene('redeem', (el, w, cue, s) => {
+  const fr = box($('div', 'frame', el), 90, 210, 900, 506); const im = img(SHOT('dash-rewards'), '', fr);
+  const btn = box($('div', 'display', el, 'Redeem →'), 1180, 180, 520, 130);
+  btn.style.cssText += 'border-radius:30px;background:var(--lime);color:var(--ink);font-size:76px;display:flex;align-items:center;justify-content:center;box-shadow:0 14px 0 #4c7a1f,0 30px 60px rgba(0,0,0,.4);';
+  const vault = box($('div', 'panel', el), 1120, 420, 260, 220), wal = box($('div', 'panel', el), 1580, 420, 260, 220);
+  [[vault, ICON.vault, 'Vault', 'var(--cyan)'], [wal, ICON.wallet, 'Your wallet', 'var(--lime)']].forEach(([p, ic, txt, c]) => { box(svg(ic, 100, c, p, 2), 80, 30); box($('div', 'display', p, txt), 0, 150, 260).style.cssText += 'font-size:40px;text-align:center;'; });
+  const flow = Array.from({ length: 7 }, () => box($('div', 'coin', el), 1380, 503));
+  const ok = box($('div', 'chip', el, '<i></i>On-chain ✓ &nbsp;0x8479…de8eb'), 1150, 700); ok.style.fontSize = '30px';
+  const tR = w('Redeem'), tW = w('wallet'), tC = w('on-chain');
+  cue(tR - 0.05, 'click', 0.9); cue(tR + 0.05, 'kaching', 0.7);
+  for (let i = 0; i < 6; i++) cue(tR + 0.5 + i * 0.22, 'coin', 0.25);
+  cue(tC, 'stamp', 0.7); cue(tC + 0.05, 'ding', 0.45, [1.6]);
+  return (lt) => {
+    slide(fr, lt, 0.1, -200, 0, 0.5); kb(im, lt, s.dur, { s0: 1.9, s1: 2.0, x0: 310, x1: 340, y0: 240, y1: 265 }); // the balance card, top left
+    pop(btn, lt, 0.4, { from: 0.5 });
+    const d = lt - tR; if (d > 0 && d < 0.25) btn.style.transform += ` translateY(${12 * Math.sin((d / 0.25) * Math.PI)}px) scale(.97)`;
+    pop(vault, lt, tR + 0.2); pop(wal, lt, tR + 0.35);
+    flow.forEach((c, i) => { const k = (lt - tR - 0.5 - i * 0.22); const p = k > 0 && k < 0.9 ? k / 0.9 : -1; tf(c, { x: p < 0 ? 0 : 200 * p, y: p < 0 ? 0 : -110 * Math.sin(Math.PI * p), o: p < 0 ? 0 : 1, s: 0.9 }); });
+    pop(ok, lt, tC, { from: 0.4 });
+  };
+});
+
+// 14. Dashboard -----------------------------------------------------------------------------------
+scene('dash', (el, w, cue) => {
+  const fr = box($('div', 'frame', el), 160, 70, 1600, 900); const im = img(SHOT('dash-overview'), '', fr);
+  // Callouts in screenshot pixels (1920×1080), mapped onto the 1600×900 frame.
+  // [x, y, sticker dx, sticker dy] — stickers sit where they do not cover the hunter's name.
+  const C = { level: [645, 242, 30, 24], profit: [975, 322, 30, -96], chests: [1275, 322, 30, -96], pool: [335, 577, 30, 50], countdown: [480, 34, 60, -26] };
+  const k = 1600 / 1920;
+  const tags = [['level', 'Level', ''], ['profit', 'Profit', ' cyan'], ['chests', 'Chests found', ' gold'], ['live', 'Live pool', ''], ['countdown', 'Epoch countdown', ' cyan']].map(([word, txt, cls]) => {
+    const key = word === 'live' ? 'pool' : word;
+    const [x, y, dx, dy] = C[key];
+    const dot = box($('div', '', el), 160 + x * k - 18, 70 + y * k - 18, 36, 36); dot.style.cssText += 'border-radius:50%;background:var(--lime);box-shadow:0 0 0 10px rgba(166,242,93,.3);';
+    const tg = box($('div', 'sticker' + cls, el, txt), 160 + x * k + dx, 70 + y * k + dy); tg.style.fontSize = '38px';
+    return { dot, tg, at: w(word) };
+  });
+  tags.forEach((t, i) => cue(t.at, 'pop', 0.55, [1 + i * 0.1]));
+  cue(0.2, 'swish', 0.5);
+  return (lt) => {
+    const p = prog(lt, 0.1, 0.7);
+    fr.style.transform = `perspective(2000px) rotateX(${12 * (1 - p)}deg) translateY(${140 * (1 - p)}px) scale(${0.9 + 0.1 * p})`; fr.style.opacity = p;
+    tags.forEach((t) => { pop(t.dot, lt, t.at); pop(t.tg, lt, t.at + 0.05, { r: -3 }); t.dot.style.transform += ` scale(${1 + 0.15 * Math.sin(lt * 6)})`; });
+  };
+});
+
+// 15. Leaderboard & levels ------------------------------------------------------------------------
+scene('board', (el, w, cue) => {
+  const fr = box($('div', 'frame', el), 900, 140, 920, 518); img(SHOT('dash-leaderboard'), '', fr);
+  const lvl = box($('div', 'display', el, 'Level <span class="grad">up!</span>'), 110, 170); lvl.style.fontSize = '130px';
+  const pips = Array.from({ length: 5 }, (_, i) => { const e = box($('div', '', el), 110 + i * 128, 360, 110, 110); e.style.cssText += 'border-radius:24px;background:rgba(255,255,255,.08);border:4px solid rgba(255,255,255,.15);'; const c = box(img(CHEST('common'), '', e), 5, 5, 92, 92); return { e, c }; });
+  const lv = box($('div', 'sticker gold', el, 'Level 2!'), 230, 510); lv.style.fontSize = '60px';
+  const trophy = box(svg(ICON.trophy, 170, 'var(--gold)', el, 1.8), 1650, 560);
+  const top = box($('div', 'sticker', el, '#1 Top hunter'), 1180, 700); top.style.fontSize = '54px';
+  const t0 = w('Level'), tFive = w('chests'), tBoard = w('leaderboard'), tTop = w('top');
+  pips.forEach((_, i) => cue(t0 + 0.1 + i * 0.22, 'pop', 0.5, [1 + i * 0.12]));
+  cue(tFive + 0.3, 'levelup', 0.7); cue(tBoard, 'whoosh', 0.45); cue(tTop, 'fanfare', 0.45); cue(tTop, 'stamp', 0.6);
+  return (lt) => {
+    stamp(lvl, lt, t0 - 0.1, -2);
+    pips.forEach((p, i) => { const at = t0 + 0.1 + i * 0.22; pop(p.c, lt, at); p.e.style.borderColor = lt > at ? 'var(--lime)' : 'rgba(255,255,255,.15)'; });
+    stamp(lv, lt, tFive + 0.3, -4);
+    const p = prog(lt, tBoard - 0.3, 0.6); fr.style.transform = `translateX(${300 * (1 - p)}px) rotate(${3 * (1 - p)}deg)`; fr.style.opacity = p;
+    pop(trophy, lt, tTop - 0.1, { r: Math.sin(lt * 3) * 6 }); stamp(top, lt, tTop, -3);
+  };
+});
+
+// 16. Fairness ------------------------------------------------------------------------------------
+scene('fair', (el, w, cue) => {
+  const t = box($('div', 'display', el, 'Fair <span class="grad">by design</span>'), 0, 110, 1920); t.style.cssText += 'font-size:130px;text-align:center;';
+  const cards = [['secret', ICON.eyeoff, 'Secret rarities', 'revealed only after the dig', 'var(--purple)'], ['times', ICON.timer, 'Server-timed digs', 'no speed hacks', 'var(--cyan)'], ['payout', ICON.link, 'On-chain payouts', 'check every transfer', 'var(--lime)']].map(([word, ic, h, sub, c], i) => {
+    const p = box($('div', 'panel', el), 130 + i * 570, 340, 520, 470);
+    box(svg(ic, 150, c, p, 1.8), 185, 50);
+    box($('div', 'display', p, h), 0, 245, 520).style.cssText += 'font-size:58px;text-align:center;';
+    box($('div', 'mono', p, sub), 0, 330, 520).style.cssText += 'font-size:26px;text-align:center;color:rgba(255,255,255,.65);';
+    const ck = box(svg(ICON.check, 60, '#0b0f20', p, 3.5), 230, 385); ck.style.cssText += 'background:var(--lime);border-radius:50%;padding:0;width:60px;height:60px;display:flex;align-items:center;justify-content:center;';
+    return { p, ck, at: w(word) - 0.4 };
+  });
+  cue(w('fair'), 'stamp', 0.7);
+  cards.forEach((c, i) => { cue(c.at, 'whoosh', 0.35, [0.35]); cue(c.at + 0.6, 'ding', 0.4, [1.2 + i * 0.2]); });
+  return (lt) => {
+    stamp(t, lt, w('fair') - 0.1, -1);
+    cards.forEach((c) => { slide(c.p, lt, c.at, 0, 200, 0.5); pop(c.ck, lt, c.at + 0.6); });
+  };
+});
+
+// 17. Outro ---------------------------------------------------------------------------------------
+scene('outro', (el, w, cue, s) => {
+  const back = img('/landing/valley.jpg', 'full', el); back.style.filter = 'brightness(.4) saturate(1.2)';
+  const rays = box($('div', 'rays', el), 960 - 900, 300 - 900, 1800, 1800);
+  const coins = burst(el, 40, 960, 820, 77, { spread: 2600, up: 1900 }); // behind the text
+  const heroes = HEROES.map(([file], i) => box(img(PORTRAIT(file), '', el), 60 + i * 300, 790, 300, 340));
+  const logo = box(img('/brand/logo-512.png', '', el), 960 - 100, 50, 200, 200);
+  const name = box($('div', 'display grad', el, 'Hoodlox'), 0, 255, 1920); name.style.cssText += 'font-size:190px;text-align:center;filter:drop-shadow(0 12px 0 rgba(0,0,0,.35));';
+  const play = box($('div', 'sticker', el, 'Play now → hoodlox.fun'), 0, 470, 1920); play.style.cssText += 'width:auto;left:50%;font-size:70px;';
+  const meta = box($('div', 'mono', el, 'play.hoodlox.fun · $HOODL · Robinhood Chain'), 0, 610, 1920); meta.style.cssText += 'font-size:30px;text-align:center;color:rgba(255,255,255,.8);';
+  const tagRow = box($('div', '', el), 0, 670, 1920, 110); tagRow.style.cssText += 'display:flex;justify-content:center;gap:28px;';
+  const tagEls = ['DIG.', 'OPEN.', 'EARN.'].map((t, i) => { const e = $('div', 'sticker' + ['', ' cyan', ' gold'][i], tagRow, t); e.style.cssText += 'position:relative;font-size:64px;'; return e; });
+  const tPlay = w('Play'), tags = [w('Dig'), w('Open'), w('Earn')];
+  const black = $('div', 'shade', el); black.style.background = '#000';
+  cue(0.25, 'boom', 0.7); cue(0.25, 'sparkle', 0.5); heroes.forEach((_, i) => cue(0.5 + i * 0.08, 'pop', 0.3, [0.9 + i * 0.1]));
+  cue(tPlay, 'click', 0.7); cue(tPlay + 0.05, 'pop', 0.6);
+  tags.forEach((t, i) => cue(t, 'stamp', 0.85)); cue(tags[2] + 0.05, 'fanfare', 0.6); cue(tags[2] + 0.05, 'kaching', 0.5);
+  return (lt) => {
+    kb(back, lt, s.dur, { s0: 1.15, s1: 1.0 });
+    tf(rays, { r: lt * 20, o: 0.5 * prog(lt, 0.2, 0.5) });
+    pop(logo, lt, 0.25, { r: 0 }); logo.style.transform += ` translateY(${Math.sin(lt * 2) * 8}px)`;
+    const nk = lt - 0.35; name.style.transform = `scale(${nk <= 0 ? 0.3 : 0.3 + 0.7 * spring(nk)})`; name.style.opacity = nk > 0 ? 1 : 0;
+    const pk = lt - tPlay; play.style.transform = `translateX(-50%) scale(${pk <= 0 ? 0 : spring(pk)}) rotate(-2deg)`; play.style.opacity = pk > 0 ? 1 : 0;
+    slide(meta, lt, tPlay + 0.4, 0, 30, 0.4);
+    tagEls.forEach((e, i) => stamp(e, lt, tags[i], [-4, 2, -2][i]));
+    heroes.forEach((h, i) => { const k = lt - 0.5 - i * 0.08; tf(h, { y: k <= 0 ? 400 : 400 * (1 - spring(k)) + Math.sin(lt * 2 + i) * 6, o: k > 0 ? 1 : 0 }); });
+    coins(lt - tags[2] - 0.05);
+    black.style.opacity = clamp((lt - (s.dur - 0.9)) / 0.8);
+  };
+});
+
+// --- wipes between scenes ---------------------------------------------------------------------------
+const wipe = $('div', '', stage); box(wipe, -500, -100, 2900, 1280);
+const WIPE_COLORS = [['var(--lime)', 'var(--cyan)'], ['var(--cyan)', 'var(--purple)'], ['var(--gold)', 'var(--lime)'], ['var(--purple)', 'var(--cyan)']];
+const bands = [0, 1, 2].map((i) => box($('div', '', wipe), i * 180, 0, 2900 - i * 360, 1280));
+const boundaries = TL.scenes.slice(1).map((s) => s.start);
+boundaries.forEach((b) => cues.push({ t: +(b - 0.3).toFixed(3), name: 'whoosh', vol: 0.55, args: [0.55] }));
+const drawWipe = (t) => {
+  const i = boundaries.findIndex((b) => Math.abs(t - b) < 0.33);
+  if (i < 0) { wipe.style.display = 'none'; return; }
+  wipe.style.display = 'block';
+  const [c1, c2] = WIPE_COLORS[i % WIPE_COLORS.length];
+  bands[0].style.background = c1; bands[1].style.background = c2; bands[2].style.background = '#0b0f20';
+  const p = E.inOut(clamp((t - boundaries[i] + 0.33) / 0.66)), dir = i % 2 ? -1 : 1;
+  wipe.style.transform = `translateX(${dir * lerp(-3400, 3400, p)}px) skewX(-18deg)`;
+};
+
+// --- captions ---------------------------------------------------------------------------------------
+const cap = $('div', '', stage); cap.id = 'cap';
+const chunks = [];
+for (const s of TL.scenes) {
+  let cur = [];
+  s.words.forEach((x, i) => {
+    const g = { w: x.w, t: s.start + x.t, e: s.start + x.t + x.d };
+    const prev = cur[cur.length - 1];
+    if (cur.length && (cur.length >= 7 || g.t - prev.e > 0.32)) { chunks.push(cur); cur = []; }
+    cur.push(g);
+  });
+  if (cur.length) chunks.push(cur);
+}
+const CAP_FIX = { Hoodle: '$HOODL', Eth: 'ETH', hoodlox: 'hoodlox', dot: '.', fun: 'fun' };
+let capNow = null;
+const drawCap = (t) => {
+  const c = chunks.find((ch, i) => t >= ch[0].t - 0.12 && t < (chunks[i + 1]?.[0].t - 0.12 ?? Infinity) && t < ch[ch.length - 1].e + 0.5);
+  if (c !== capNow) {
+    capNow = c;
+    cap.innerHTML = c ? `<span class="box">${c.map((g) => `<em>${CAP_FIX[g.w] ?? g.w}</em>`).join(' ').replace(/<\/em> <em>\.<\/em> <em>/g, '</em><em>.</em><em>')}</span>` : '';
+  }
+  if (c) [...cap.querySelectorAll('em')].forEach((e, i) => { const g = c[Math.min(i, c.length - 1)]; e.className = t >= g.e ? 'on' : t >= g.t ? 'now' : ''; });
+};
+
+// --- render ---------------------------------------------------------------------------------------
+window.__total = TL.total;
+window.__cues = cues.sort((a, b) => a.t - b.t);
+window.__render = (t) => {
+  drawBg(t);
+  for (const s of scenes) {
+    const lt = t - s.start, on = lt >= 0 && lt < s.dur;
+    s.el.style.display = on ? 'block' : 'none';
+    if (on) s.draw(lt);
+  }
+  drawWipe(t);
+  drawCap(t);
+};
+await document.fonts.ready;
+await Promise.all([...document.images].map((i) => (i.complete ? 0 : new Promise((r) => { i.onload = i.onerror = r; }))));
+window.__render(+(new URLSearchParams(location.search).get('t') ?? 0));
+window.__ready = true;
+</script>
+</body>
+</html>

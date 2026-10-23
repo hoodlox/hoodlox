@@ -14,11 +14,8 @@ async function call(path, { token, body, method = body ? 'POST' : 'GET', headers
   });
   return { status: res.status, ...(await res.json()) };
 }
-async function signIn(kp) {
-  const { nonce, message } = await call('/api/auth/nonce', { body: {} });
-  const signature = await kp.signMessage({ message });
-  return call('/api/auth/login', { body: { address: kp.address.toLowerCase(), signature, nonce } });
-}
+// Holders enter with a typed address: no wallet connection, no signature.
+const signIn = (kp) => call('/api/auth/address', { body: { address: kp.address.toLowerCase() } });
 const FAST = { 'x-fastdig': '30' };
 
 const kp = privateKeyToAccount(generatePrivateKey()), rival = privateKeyToAccount(generatePrivateKey());
@@ -32,11 +29,10 @@ assert.equal((await call('/api/player', { token: (await signIn(rival)).token, bo
 const r = await signIn(rival);
 await call('/api/player', { token: r.token, body: { name: `${name}r`, hero: 'Knight' } });
 
-// Bad signature is refused.
-const { nonce } = await call('/api/auth/nonce', { body: {} });
-const forged = await rival.signMessage({ message: (await call('/api/auth/nonce', { body: {} })).message });
-assert.equal((await call('/api/auth/login', { body: { address: kp.address, signature: forged, nonce } })).status, 401);
+// Malformed addresses are refused; the same address brings back the same hunter.
+for (const address of ['', '0x123', 'hello', `0x${'0'.repeat(40)}`]) assert.equal((await call('/api/auth/address', { body: { address } })).status, 400, `refuses "${address}"`);
 assert.equal(a.me === null && (await call('/api/me', { token: a.token })).me.id, kp.address, 'id is the checksummed address');
+assert.equal((await signIn(kp)).me.name, name, 'entering again with the address returns the hunter');
 
 const ep = await call('/api/epoch');
 console.log('epoch', ep.epoch, 'crates', ep.crates.length, 'pool', ep.pool.map((p) => `${p.asset} ${p.funded}`).join(', '));

@@ -3,7 +3,7 @@
 // → bag → reveal → dashboard. Output: video/shots/*.png. usage: node video/capture.mjs [only,names]
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
-import { useWallet, apiSignIn } from '../tools/wallet.mjs';
+import { newAddress, apiEnter } from '../tools/wallet.mjs';
 
 const BASE = 'http://localhost:5173', OUT = 'video/shots';
 const only = process.argv[2]?.split(',');
@@ -48,9 +48,8 @@ if (want('gate-wallet') || want('gate-heroes')) {
 // The arena.
 const page = await browser.newPage({ viewport: VIEW });
 page.on('pageerror', (e) => console.log('pageerror:', e.message));
-await useWallet(page);
 const name = `Loxley${tag}`;
-await page.goto(`${BASE}/map.html?scene=forest/Mining_Pack_Free.fbx&tex=PP_Color_Palette.png&animals=10&arena=1&fastdig=20&fresh=1&autoconnect=1&hero=Knight&name=${name}`, { waitUntil: 'commit' });
+await page.goto(`${BASE}/map.html?scene=forest/Mining_Pack_Free.fbx&tex=PP_Color_Palette.png&animals=10&arena=1&fastdig=20&fresh=1&address=${newAddress()}&hero=Knight&name=${name}`, { waitUntil: 'commit' });
 await page.waitForFunction(() => window.__ready === true && window.__game, null, { timeout: 900000 });
 await page.addStyleTag({ content: HIDE });
 await page.evaluate(() => window.__game.sites.ready);
@@ -65,7 +64,7 @@ const site = await page.evaluate((want) => {
 console.log('site', site.i);
 const rivals = [];
 for (const [n, hero, dx, dz, ry] of [['Aria', 'Mage', -420, 250, 2.2], ['Bram', 'Barbarian', 380, 320, -2.4], ['Kaito', 'Ranger', 120, 650, 3.1]]) {
-  const r = await apiSignIn(BASE);
+  const r = await apiEnter(BASE);
   const res = await r.post('/api/player', { name: `${n}${tag}`, hero });
   if (res.error) console.log(n, res.error);
   r.pos = { x: site.x + dx, z: site.z + dz, ry, anim: 'idle' };

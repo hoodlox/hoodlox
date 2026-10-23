@@ -31,16 +31,16 @@ for (let i = 0; ; i++) {
 
 // Random keys: anvil's default accounts carry an EIP-7702 sweeper on Robinhood Chain mainnet.
 const vaultKey = generatePrivateKey(), playerKey = generatePrivateKey();
-const vault = privateKeyToAccount(vaultKey), player = privateKeyToAccount(playerKey);
-for (const a of [vault.address, player.address, HOLDER]) await test.setBalance({ address: a, value: parseEther('1') });
+const vault = privateKeyToAccount(vaultKey), player = privateKeyToAccount(playerKey), stranger = privateKeyToAccount(generatePrivateKey());
+for (const a of [vault.address, player.address, stranger.address, HOLDER]) await test.setBalance({ address: a, value: parseEther('1') });
 await test.impersonateAccount({ address: HOLDER });
 const holder = createWalletClient({ account: HOLDER, chain, transport: http(RPC) });
-for (const [to, n] of [[player.address, '5000000'], [vault.address, '5000000']]) {
+for (const [to, n] of [[player.address, '5000000'], [vault.address, '5000000'], [stranger.address, '2000000']]) {
   await pub.waitForTransactionReceipt({ hash: await holder.writeContract({ address: HOODL, abi: erc20Abi, functionName: 'transfer', args: [to, parseUnits(n, 18)] }) });
 }
 
 Object.assign(process.env, {
-  RPC_URL: RPC, VAULT_KEY: vaultKey, HOODL_TOKEN: HOODL, POOL_ETH: '0.01', POOL_HOODL: '2000000', POOL_STOCK_USD: '0',
+  RPC_URL: RPC, VAULT_KEY: vaultKey, HOODL_TOKEN: HOODL, HOODL_MIN_HOLD: '1000000', POOL_ETH: '0.01', POOL_HOODL: '2000000', POOL_STOCK_USD: '0',
   PGLITE_DIR: mkdtempSync(join(tmpdir(), 'th-fork-')), ALLOW_TEST_KNOBS: '1',
 });
 const { handle } = await import('../server/routes.js');
@@ -56,19 +56,27 @@ const cfg = await call('/api/config');
 assert.equal(cfg.demo, false);
 assert.equal(cfg.vault, vault.address);
 
-// 1. Sign in.
-const { nonce, message } = await call('/api/auth/nonce', { body: {} });
-const login = await call('/api/auth/login', { body: { address: player.address, nonce, signature: await player.signMessage({ message }) } });
+// 1. Enter with the address only. Holders get in; an empty wallet and the vault itself do not.
+const nobody = privateKeyToAccount(generatePrivateKey()).address;
+assert.equal((await call('/api/auth/address', { body: { address: nobody } })).status, 403, 'non-holders cannot hunt');
+assert.equal((await call('/api/auth/address', { body: { address: vault.address } })).status, 400, 'the vault is not a player');
+const login = await call('/api/auth/address', { body: { address: player.address.toLowerCase() } });
 assert.equal(login.status, 200, login.error);
 const token = login.token;
 let me = (await call('/api/player', { token, body: { name: `Fk${Date.now().toString(36).slice(-6)}`, hero: 'Ranger' } })).me;
 console.log('hunter', me.name, '$HOODL on-chain', me.tokens);
 assert.equal(me.tokens, 5_000_000);
 
-// 2. Buy the pickaxe with a real transfer, as the browser wallet would send it.
-const { tx } = await call('/api/shop/tx', { token, body: { tool: 'pickaxe' } });
-const wallet = createWalletClient({ account: player, chain, transport: http(RPC) });
-const hash = await wallet.sendTransaction({ to: tx.to, data: tx.data });
+// 2. Buy the pickaxe: the holder sends the $HOODL from their own wallet app and pastes the hash.
+const { pay } = await call('/api/shop/tx', { token, body: { tool: 'pickaxe' } });
+assert.deepEqual([pay.from, pay.to, pay.amount], [player.address, vault.address, 1_000_000]);
+const send = (account) => createWalletClient({ account, chain, transport: http(RPC) })
+  .writeContract({ address: HOODL, abi: erc20Abi, functionName: 'transfer', args: [pay.to, parseUnits(String(pay.amount), 18)] });
+// Someone who typed this address pays from their own wallet: that does not unlock anything here.
+const foreign = await send(stranger);
+await pub.waitForTransactionReceipt({ hash: foreign });
+assert.equal((await call('/api/shop/buy', { token, body: { tool: 'pickaxe', hash: foreign } })).status, 402, 'payment must come from the hunter address');
+const hash = await send(player);
 await pub.waitForTransactionReceipt({ hash });
 const bought = await call('/api/shop/buy', { token, body: { tool: 'pickaxe', hash } });
 assert.equal(bought.status, 200, bought.error);

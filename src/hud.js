@@ -2,7 +2,7 @@
 // rewards), the "chest found" popup and the chest opening reveal. State comes from the server
 // (net.js live); every action is a server call that returns the updated hunter.
 import { BRAND, TOKEN, TOOLS, tool, rarity, amount, TOKEN_SUPPLY, countdown, usd, short, metres, clock, portrait } from './game.js';
-import { api, live, setMe, buyTool } from './net.js';
+import { api, live, setMe, buyTool, paymentFor } from './net.js';
 import { HERO_CARD } from './cards.js';
 
 const el = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; };
@@ -146,9 +146,9 @@ export function createHUD({ me, sites, onOpen = () => {}, onDash = () => {} }) {
   }
 
   // --- shop --------------------------------------------------------------------------------------
-  let paying = null;
+  let paying = null, pay = null; // pay: what to send for a live purchase while we wait for its hash
   function renderShop() {
-    $('.shop__balance').textContent = me.guest ? 'Connect a wallet to buy tools.' : `Balance: ${tok(me.tokens)}`;
+    $('.shop__balance').textContent = me.guest ? 'Enter a wallet address to buy tools.' : `Balance: ${tok(me.tokens)}`;
     $('.shop__list').innerHTML = TOOLS.map((t) => {
       const owned = me.tools.includes(t.id), on = me.equipped === t.id;
       const action = on ? '<button class="btn btn--small" type="button" disabled>Equipped</button>'
@@ -160,12 +160,32 @@ export function createHUD({ me, sites, onOpen = () => {}, onDash = () => {} }) {
         <div class="tool__info"><b>${t.name}</b><span>Digs a crate in ${fmtTime(t.seconds)}</span>
           <span class="tool__price">${t.price ? `${tok(t.price)} · ${pct(t.price)}` : 'Free starter tool'}</span></div>
         ${action}</li>`;
-    }).join('');
+    }).join('') + (pay ? `<li class="shop__pay">
+        <b>Buy ${tool(pay.tool).name}</b>
+        <span>1. From your wallet <code>${short(pay.from)}</code>, send exactly <code>${tok(pay.amount)}</code> to the game vault on Robinhood Chain:</span>
+        <code class="shop__vault">${pay.to}</code>
+        <span>2. Paste the transaction hash:</span>
+        <input class="shop__hash" type="text" spellcheck="false" placeholder="0x…" />
+        <div class="shop__payBtns"><button class="btn btn--small btn--primary" type="button" data-paid${paying ? ' disabled' : ''}>${paying ? 'Checking…' : 'Confirm payment'}</button>
+        <button class="btn btn--small" type="button" data-cancelpay>Cancel</button></div>
+      </li>` : '');
   }
+  // Demo mode buys straight away. Live: show where to send the $HOODL, then check the pasted hash.
   async function buy(id) {
+    if (!live.config?.demo) {
+      try { pay = { tool: id, ...(await paymentFor(id)) }; } catch (e) { toast(e.message); }
+      return show('shop');
+    }
     paying = id;
     renderShop();
     try { await buyTool(id); toast(`${tool(id).name} equipped.`); } catch (e) { toast(e.message); } finally { paying = null; renderShop(); }
+  }
+  async function confirmPay() {
+    const hash = $('.shop__hash').value.trim();
+    if (!/^0x[0-9a-fA-F]{64}$/.test(hash)) return toast('Paste the 0x… transaction hash of your transfer.');
+    paying = pay.tool;
+    renderShop();
+    try { await buyTool(pay.tool, hash); toast(`${tool(pay.tool).name} equipped.`); pay = null; } catch (e) { toast(e.message); } finally { paying = null; renderShop(); }
   }
   async function equip(id) {
     try { setMe((await api('/api/shop/equip', { tool: id })).me); } catch (e) { toast(e.message); }
@@ -174,6 +194,8 @@ export function createHUD({ me, sites, onOpen = () => {}, onDash = () => {} }) {
   $('.shop__list').addEventListener('click', (e) => {
     const b = e.target.closest('[data-buy]')?.dataset.buy, q = e.target.closest('[data-equip]')?.dataset.equip;
     if (b) buy(b); else if (q) equip(q);
+    else if (e.target.closest('[data-paid]')) confirmPay();
+    else if (e.target.closest('[data-cancelpay]')) { pay = null; renderShop(); }
   });
 
   // --- inventory -----------------------------------------------------------------------------------
@@ -225,7 +247,7 @@ export function createHUD({ me, sites, onOpen = () => {}, onDash = () => {} }) {
   async function openChest(id) {
     const c = me.chests.find((x) => x.id === id);
     if (!c || opening) return;
-    if (me.guest) return toast('Connect a wallet to open chests.');
+    if (me.guest) return toast('Enter a wallet address to open chests.');
     opening = true;
     const r = rarity(c.rarity);
     const m = $('.reveal');

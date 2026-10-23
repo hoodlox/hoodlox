@@ -124,8 +124,8 @@ body.dash-open #ctl, body.dash-open #dig, body.dash-open .hud { display: none; }
 .inv img { width: 100%; aspect-ratio: 1; object-fit: contain; }
 .inv b { color: var(--r); }
 .empty { color: var(--muted); font-size: 13px; }
-.shop { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.shop .tool { align-items: flex-start; }
+.dash .shop { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; } /* scoped: the HUD shop panel is .shop too */
+.dash .shop .tool { align-items: flex-start; }
 .tool__t { font-size: 64px !important; }
 .tool__t small { font-size: 24px; color: var(--muted); margin-left: 2px; }
 .tag { font-size: 12px; color: var(--gold); padding: 6px 0; }
@@ -144,7 +144,7 @@ body.dash-open #ctl, body.dash-open #dig, body.dash-open .hud { display: none; }
   .ov, .rw, .pool, .cols { grid-template-columns: 1fr; }
   .ov__card { max-width: 260px; }
   .odds { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .shop { grid-template-columns: 1fr; }
+  .dash .shop { grid-template-columns: 1fr; }
   .lb li { grid-template-columns: 28px 38px minmax(0, 1fr) auto; } .lb span.num { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .lvl__bar i { transition: none; } }

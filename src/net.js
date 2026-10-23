@@ -38,42 +38,21 @@ export const session = {
   clear() { token = null; set(null); },
 };
 
-// The EVM wallet in the page (MetaMask, Rabby, Coinbase…), or a test stand-in tools put on window.ethereum.
-export const provider = () => window.ethereum ?? null;
-
-// Connect + sign the server's nonce (no transaction). Returns { me } (me is null for a new wallet).
-export async function signIn() {
-  const p = provider();
-  if (!p) throw new Error('No wallet found. Install MetaMask or Rabby, or look around as a guest.');
-  const [address] = await p.request({ method: 'eth_requestAccounts' });
-  const { nonce, message } = await api('/api/auth/nonce', {});
-  const hex = `0x${[...new TextEncoder().encode(message)].map((b) => b.toString(16).padStart(2, '0')).join('')}`;
-  const signature = await p.request({ method: 'personal_sign', params: [hex, address] });
-  const res = await api('/api/auth/login', { address, nonce, signature });
+// Enter with a wallet address (no wallet connection, no signature). Returns { me } (null for a new holder).
+export async function enterWith(address) {
+  const res = await api('/api/auth/address', { address });
   session.use(res.token);
-  return { address, me: res.me };
+  return res;
 }
 
-// Puts the wallet on Robinhood Chain, adding the network first if the wallet does not know it.
-async function useChain(chainId) {
-  const p = provider(), id = `0x${chainId.toString(16)}`;
-  try { await p.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: id }] }); } catch (e) {
-    if (e.code !== 4902) throw e;
-    await p.request({ method: 'wallet_addEthereumChain', params: [{
-      chainId: id, chainName: 'Robinhood Chain', nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-      rpcUrls: ['https://robinhood-rpc.publicnode.com'], blockExplorerUrls: [live.config.explorer],
-    }] });
-  }
-}
+// What to send for a tool when $HOODL is live: { from, to, token, amount }. The holder sends it from
+// their own wallet app and pastes the transaction hash into buyTool.
+export const paymentFor = async (id) => (await api('/api/shop/tx', { tool: id })).pay;
 
-// Buys a tool. Demo mode just asks the server; otherwise the wallet sends the $HOODL payment the
-// server prepared, and the server checks it on-chain (retrying while it confirms).
-export async function buyTool(id) {
+// Buys a tool. Demo mode just asks the server; otherwise the server checks the pasted payment hash
+// on-chain (retrying while it confirms).
+export async function buyTool(id, hash) {
   if (live.config?.demo) return setMe((await api('/api/shop/buy', { tool: id })).me);
-  const { tx } = await api('/api/shop/tx', { tool: id });
-  await useChain(tx.chainId);
-  const [from] = await provider().request({ method: 'eth_requestAccounts' });
-  const hash = await provider().request({ method: 'eth_sendTransaction', params: [{ from, to: tx.to, data: tx.data }] });
   for (let i = 0; ; i++) {
     try { return setMe((await api('/api/shop/buy', { tool: id, hash })).me); } catch (e) {
       if (e.status !== 402 || i >= 10) throw e;

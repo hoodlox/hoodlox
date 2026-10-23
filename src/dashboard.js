@@ -198,7 +198,7 @@ export function createDashboard({ me, sites, hud }) {
     $('.js-redeem').disabled = guest || !ready.length || redeeming;
     $('.js-redeem').textContent = redeeming ? 'Sending…' : 'Redeem to wallet';
     if (!redeeming) {
-      $('.js-redeemnote').textContent = guest ? 'Connect a wallet to redeem.'
+      $('.js-redeemnote').textContent = guest ? 'Enter a wallet address to redeem.'
         : bal.length && !ready.length ? 'These assets pay out once the vault holds them.'
         : ready.length ? 'Sent straight to your wallet, one transaction per asset.' : 'Open chests to earn something to redeem.';
     }
@@ -263,6 +263,7 @@ export function createDashboard({ me, sites, hud }) {
   }
   $('.js-shop').addEventListener('click', async (e) => {
     const b = e.target.closest('[data-buy]')?.dataset.buy, q = e.target.closest('[data-equip]')?.dataset.equip;
+    if (b && !live.config?.demo) { close(); return hud.buy(b); } // live: the HUD shop shows how to pay
     if (b) { e.target.disabled = true; e.target.textContent = 'Paying…'; await hud.buy(b); }
     else if (q) { try { setMe((await api('/api/shop/equip', { tool: q })).me); } catch (err) { hud.toast(err.message); } }
     render();

@@ -16,23 +16,23 @@ const page = await ctx.newPage();
 page.on('pageerror', (e) => console.log('pageerror:', e.message));
 
 await page.goto(URL + '&fresh=1', { waitUntil: 'commit' });
-await page.waitForSelector('.gate__step--wallet:not([hidden])', { timeout: 300000 });
+await page.waitForSelector('.gate', { timeout: 300000 });
 await page.waitForFunction(() => !document.querySelector('.gate__play').disabled, null, { timeout: 600000 });
 assert.equal(await page.evaluate(() => window.__ready), undefined, 'map must not report ready while the gate is up');
-await page.screenshot({ path: 'shots/gate-wallet.png' });
+assert.equal(await page.$('.gate__connect'), null, 'no wallet connection anywhere');
 
-await page.click('.gate__connect'); // no Phantom in this browser
-await page.waitForSelector('.gate__err:not([hidden])');
-assert.match(await page.textContent('.gate__err'), /Phantom was not found/);
+// Holders type an address; a malformed one is refused before any request.
+await page.fill('.gate__addr', '0x12345');
+await page.click('.gate__play');
+assert.ok(await page.$('.gate__addr.is-bad'), 'a bad address should be flagged');
+assert.match(await page.textContent('.gate__err'), /wallet address/);
 
-await page.click('.gate__guest');
-await page.waitForSelector('.gate__step--agent:not([hidden])');
 await page.click('.hero[data-hero="Mage"]');
-await page.click('.gate__play'); // empty name is refused
-assert.ok(await page.$('.gate__name.is-bad'), 'empty name should be flagged');
+await page.click('.gate__guest'); // empty name is refused
+await page.waitForSelector('.gate__name.is-bad');
 await page.fill('.gate__name', `Gst${tag}`);
 await page.screenshot({ path: 'shots/gate-agent.png' });
-await page.click('.gate__play');
+await page.click('.gate__guest');
 await page.waitForFunction(() => window.__ready === true, null, { timeout: 600000 });
 assert.equal(await page.$('.gate'), null, 'gate should be gone after Play');
 assert.equal(await page.textContent('.hud__meName'), `Gst${tag}`);
@@ -62,7 +62,7 @@ assert.ok(await page.isHidden('.dash'), 'H toggles it closed');
 await page.evaluate(() => window.__game.sites.ready);
 await page.evaluate(() => { const s = window.__game.sites.sites.find((x) => x.live); window.__player.teleport(s.at.x + 80, s.at.z + 80); });
 await page.waitForFunction(() => !document.querySelector('.dig__btn').hidden, null, { timeout: 20000 });
-assert.equal(await page.textContent('.dig__btn'), 'Connect a wallet to dig');
+assert.equal(await page.textContent('.dig__btn'), 'Enter a wallet address to dig');
 assert.ok(await page.isDisabled('.dig__btn'));
 
 await page.click('.hud__boardBtn');

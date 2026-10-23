@@ -1,10 +1,10 @@
-// Sessions. A wallet signs a one-time message (EIP-191, no transaction, no fee); the server recovers
-// the signer and issues an HMAC-signed token. Guests get a token without a wallet and can only look.
+// Sessions. A holder types their wallet address (no wallet connection, no signature) and gets an
+// HMAC-signed token. The address is only ever paid, never charged: redeems go to it and tool purchases
+// must come from it on-chain, so typing someone else's address can only send that person rewards.
+// Guests get a token without an address and can only look.
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
-import { verifyMessage } from 'viem';
 import { config } from './config.js';
 import { checksum } from './chain.js';
-import { q, one } from './db.js';
 
 const b64 = (s) => Buffer.from(s).toString('base64url');
 const mac = (s) => createHmac('sha256', config.sessionSecret).update(s).digest('base64url');
@@ -25,23 +25,10 @@ export function verify(header) {
   return exp > Date.now() ? id : null;
 }
 
-export const loginMessage = (nonce) => `Sign in to Hoodlox.\n\nThis only proves you own this wallet. It costs nothing and sends no transaction.\n\nNonce: ${nonce}`;
-
-export async function newNonce() {
-  const nonce = randomBytes(16).toString('hex');
-  await q('delete from nonces where created_at < now() - interval \'10 minutes\'');
-  await q('insert into nonces (nonce) values ($1)', [nonce]);
-  return { nonce, message: loginMessage(nonce) };
-}
-
-// Checks the signed nonce (single use) and returns the checksummed wallet address, or throws.
-export async function login(address, signature, nonce) {
-  const used = await one('delete from nonces where nonce = $1 and created_at > now() - interval \'10 minutes\' returning nonce', [nonce]);
-  if (!used) throw Object.assign(new Error('Sign-in expired, try again.'), { status: 401 });
-  const addr = checksum(address);
-  const ok = addr && /^0x[0-9a-fA-F]+$/.test(signature)
-    && await verifyMessage({ address: addr, message: loginMessage(nonce), signature }).catch(() => false);
-  if (!ok) throw Object.assign(new Error('Signature does not match this wallet.'), { status: 401 });
+// The checksummed player id for a typed address, or throws.
+export function addressId(address) {
+  const addr = checksum(String(address ?? '').trim());
+  if (!addr || /^0x0{40}$/i.test(addr)) throw Object.assign(new Error('Enter your wallet address: 0x followed by 40 letters and numbers.'), { status: 400 });
   return addr;
 }
 

@@ -4,18 +4,17 @@
 // the dashboard. Digs run 60× faster (?fastdig=60). Screenshots: shots/dig-*.png.
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
-import { useWallet, apiSignIn } from './wallet.mjs';
+import { newAddress, apiEnter } from './wallet.mjs';
 
 const BASE = 'http://localhost:5173';
 const name = `Dig${Date.now().toString(36).slice(-5)}`;
-const URL = `${BASE}/map.html?scene=forest/Mining_Pack_Free.fbx&tex=PP_Color_Palette.png&animals=4&noshadow&arena=1&fastdig=60&fresh=1&autoconnect=1&hero=Knight&name=${name}`;
+const URL = `${BASE}/map.html?scene=forest/Mining_Pack_Free.fbx&tex=PP_Color_Palette.png&animals=4&noshadow&arena=1&fastdig=60&fresh=1&address=${newAddress()}&hero=Knight&name=${name}`;
 const browser = await chromium.launch({
   executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe',
   args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
 });
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
 page.on('pageerror', (e) => console.log('pageerror:', e.message));
-await useWallet(page);
 const sim = () => page.evaluate(() => window.__simTime);
 const simWait = async (s) => { const t0 = await sim(); await page.waitForFunction((t) => window.__simTime >= t, t0 + s, { timeout: 180000 }); };
 const me = () => page.evaluate(() => JSON.parse(JSON.stringify(window.__game.live.me)));
@@ -39,7 +38,7 @@ assert.ok(await page.isVisible('.dig__btn'), 'Dig button should show on a crate'
 await page.screenshot({ path: 'shots/dig-site.png' });
 
 // A rival (second wallet, over the API) claims it first: we are locked out until they let go.
-const rival = await apiSignIn(BASE);
+const rival = await apiEnter(BASE);
 await rival.post('/api/player', { name: `${name}R`, hero: 'Rogue' });
 await rival.post('/api/sync', { x: site.x, z: site.z });
 const claim = await rival.post('/api/dig/start', { epoch: site.epoch, i: site.i });

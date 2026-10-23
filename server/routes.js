@@ -2,10 +2,10 @@
 // api/index.js on Vercel and by the Vite dev server locally.
 import { config } from './config.js';
 import { q, one } from './db.js';
-import { issue, verify, newNonce, login, guestId, isGuest } from './auth.js';
+import { issue, verify, addressId, guestId, isGuest } from './auth.js';
 import { epochOf, epochEndsAt, layout, publicLayout, poolAssets, crateValueUsd, pickReward } from './rules.js';
 import { priceUsd } from './prices.js';
-import { holding, payable, purchaseTx, verifyPurchase, sendPayout, payoutState, vaultAccount } from './chain.js';
+import { holding, payable, verifyPurchase, sendPayout, payoutState, vaultAccount } from './chain.js';
 import { TOOLS, tool as toolOf, HEROES, TOKEN, TOKEN_SUPPLY, levelOf, validName } from '../src/game.js';
 
 const fail = (status, error) => { throw Object.assign(new Error(error), { status }); };
@@ -65,12 +65,12 @@ async function pool(n) {
 
 async function authed(ctx) {
   const id = verify(ctx.headers.authorization);
-  if (!id) fail(401, 'Sign in first.');
+  if (!id) fail(401, 'Enter your wallet address first.');
   return id;
 }
 async function wallet(ctx) {
   const id = await authed(ctx);
-  if (isGuest(id)) fail(403, 'Connect a wallet to do this. Guests can only look around.');
+  if (isGuest(id)) fail(403, 'Enter your wallet address to do this. Guests can only look around.');
   return id;
 }
 
@@ -82,9 +82,15 @@ const routes = {
   }),
 
   // --- sessions ---
-  'POST /api/auth/nonce': () => newNonce(),
-  'POST /api/auth/login': async ({ body }) => {
-    const id = await login(String(body.address), String(body.signature), String(body.nonce));
+  // Holders enter with their wallet address only. Redeems are paid to it.
+  'POST /api/auth/address': async ({ body }) => {
+    const id = addressId(body.address);
+    if ([vaultAccount()?.address, config.hoodlToken].some((a) => a?.toLowerCase() === id.toLowerCase())) fail(400, 'That is a contract or the game vault, not a holder wallet.');
+    if (config.hoodlToken && config.minHold > 0) {
+      const bal = await hoodlBalance(id);
+      if (bal === null) fail(503, 'Could not read this wallet on Robinhood Chain. Try again.');
+      if (bal < config.minHold) fail(403, `This wallet holds ${bal.toLocaleString('en-US')} $${TOKEN}. Hunting needs at least ${config.minHold.toLocaleString('en-US')}.`);
+    }
     return { token: issue(id), me: await me(id) };
   },
   'POST /api/auth/guest': async () => ({ token: issue(guestId()), me: null }),
@@ -206,7 +212,9 @@ const routes = {
     const id = await wallet(ctx);
     if (!config.hoodlToken) fail(400, 'Demo mode: no token payment needed.');
     const t = TOOLS.find((x) => x.id === ctx.body.tool && x.price > 0) ?? fail(404, 'Unknown tool.');
-    return { tx: await purchaseTx(toolPrice(t)) };
+    // No wallet connection: the holder sends this transfer from their own wallet app, then pastes the hash.
+    const vault = vaultAccount() ?? fail(503, 'Tool sales open once the vault is live.');
+    return { pay: { from: id, to: vault.address, token: config.hoodlToken, amount: toolPrice(t), chainId: config.chainId } };
   },
   'POST /api/shop/buy': async (ctx) => {
     const id = await wallet(ctx);

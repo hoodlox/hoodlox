@@ -102,15 +102,16 @@
       <section id="start">
         <p class="num">02</p>
         <h2>Getting started</h2>
-        <h3>1. Connect a wallet</h3>
-        <p>Open <a href="/play">/play</a> and press <em>Connect wallet</em>. Any EVM wallet works: MetaMask, Rabby, Coinbase Wallet. You sign a short message to prove you own the address. Signing is free and sends no transaction.</p>
-        <h3>2. Pick a hunter and a name</h3>
-        <p>Choose one of six hunters. They look different and play the same. Your name is 2 to 16 characters (letters, numbers, spaces, <code>.</code> <code>'</code> <code>-</code>) and must be unique.</p>
+        <h3>1. Pick a hunter and a name</h3>
+        <p>Open <a href="/play">/play</a> and choose one of six hunters. They look different and play the same. Your name is 2 to 16 characters (letters, numbers, spaces, <code>.</code> <code>'</code> <code>-</code>) and must be unique.</p>
         <div class="figure heroes" aria-label="Hunters"></div>
+        <h3>2. Type your wallet address</h3>
+        <p>Paste the Robinhood Chain (EVM) address that holds your $HOODL. There is no wallet connection and nothing to sign: the game never touches your wallet. Your rewards collect in the game pool and are sent to this address when you redeem. Next time, the same address brings back the same hunter.</p>
+        <aside class="callout"><b>Double-check the address</b><p>Redeems go to exactly what you typed. Use an address you control, not an exchange deposit address or a contract.</p></aside>
         <h3>3. Enter the arena</h3>
         <p>The dashboard opens first. Press <em>Enter arena</em> to drop into the valley. Your session is remembered for 14 days on this browser.</p>
         <h3>Looking around as a guest</h3>
-        <p>Guests can walk the valley and watch, but cannot dig, open chests, buy tools or redeem, and do not appear on the leaderboard. Connect a wallet any time to hunt.</p>
+        <p>Guests can walk the valley and watch, but cannot dig, open chests, buy tools or redeem, and do not appear on the leaderboard. Enter a wallet address any time to hunt.</p>
       </section>
 
       <section id="controls">
@@ -177,7 +178,7 @@
         <h2>Tools</h2>
         <p>Every hunter starts with a free shovel. Faster tools dig the same crates in less time, so you reach contested crates first. Tools are permanent and you can switch between the ones you own.</p>
         <div class="tools js-tools"></div>
-        <p>Prices are a share of the 1,000,000,000 $HOODL supply. When you buy, your wallet sends a normal $HOODL transfer to the vault. The server confirms it on-chain, then gives you the tool. One payment buys one tool.</p>
+        <p>Prices are a share of the 1,000,000,000 $HOODL supply. To buy, the shop shows the vault address and the exact amount. Send that $HOODL from your own wallet app, from the address you play with, then paste the transaction hash into the shop. The server confirms it on-chain, then gives you the tool. One payment buys one tool.</p>
       </section>
 
       <section id="chests">
@@ -214,7 +215,7 @@
         <h2>Redeeming</h2>
         <p>Rewards collect as balances in your account. Open the dashboard, go to <em>Rewards</em>, and press <em>Redeem to wallet</em>.</p>
         <ul>
-          <li>The vault sends one transfer per asset to the wallet you signed in with. The vault pays the gas.</li>
+          <li>The vault sends one transfer per asset to the wallet address you entered. The vault pays the gas.</li>
           <li>Each redeem shows its status and a link to the transaction on the Blockscout explorer.</li>
           <li>If the network is slow, a redeem stays <i>pending</i> and is retried automatically.</li>
           <li>Guests cannot redeem. Neither can anyone while the game is in demo mode.</li>
@@ -276,20 +277,21 @@
             <tr><th>SPY</th><td><code>0x117cc2133c37B721F49dE2A7a74833232B3B4C0C</code></td></tr>
           </tbody>
         </table>
-        <p class="small">Your wallet is switched to Robinhood Chain (and the network added if needed) the first time you buy a tool.</p>
+        <p class="small">Send tool payments on Robinhood Chain, from the address you play with.</p>
       </section>
 
       <section id="faq">
         <p class="num">14</p>
         <h2>FAQ</h2>
-        <details><summary>Does signing in cost anything?</summary><p>No. You sign a message, not a transaction. Only buying a tool sends a transaction, and that costs normal Robinhood Chain gas.</p></details>
+        <details><summary>Why no wallet connection?</summary><p>So you never have to trust a site with your wallet. You only type your address. Playing costs nothing; only buying a tool needs a transfer, which you send yourself from your own wallet app.</p></details>
+        <details><summary>Can someone else type my address?</summary><p>Yes, and they would play your hunter, but they gain nothing: every reward is paid to your address, and tools only unlock with a payment sent from your address. Nobody can move your rewards anywhere else.</p></details>
         <details><summary>Someone is digging the crate I wanted.</summary><p>Find another, or wait: if they walk away or disconnect, the crate frees itself within their tool's time plus 30 seconds.</p></details>
         <details><summary>The epoch ended while I was digging.</summary><p>That crate was cleared with the rest, so the dig ends empty. Start digs with enough time left on the clock, which the HUD shows.</p></details>
         <details><summary>Do I lose unopened chests at the end of an epoch?</summary><p>No. Only crates still in the ground are cleared. Chests in your inventory wait for you.</p></details>
         <details><summary>Why did my chest open empty?</summary><p>Its epoch's pool had nothing left that could cover its value, usually after a big price move. It is rare.</p></details>
         <details><summary>My redeem says pending.</summary><p>The transfer is being retried. It is never sent twice: the server records each transfer before broadcasting and checks it before any retry.</p></details>
         <details><summary>Can I play on a phone?</summary><p>Yes. On-screen buttons appear for walking, running and jumping; drag to look around.</p></details>
-        <details><summary>Can I change my hunter or name?</summary><p>Not yet. One hunter per wallet.</p></details>
+        <details><summary>Can I change my hunter or name?</summary><p>Not yet. One hunter per wallet address.</p></details>
       </section>
 
       <section id="glossary">

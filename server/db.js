@@ -48,7 +48,6 @@ create table if not exists payouts (
 create table if not exists purchases (
   signature text primary key, player text not null, tool text not null, at timestamptz not null default now()
 );
-create table if not exists nonces (nonce text primary key, created_at timestamptz not null default now());
 -- Ticker rename $HUNT → $HOODL (22 Oct 2026): carry old rows over, no-ops once done.
 -- (No semicolons in comments here: production splits this schema on them.)
 update pools set asset = 'HOODL' where asset = 'HUNT' and not exists (select 1 from pools p2 where p2.epoch = pools.epoch and p2.asset = 'HOODL');

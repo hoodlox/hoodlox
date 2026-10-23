@@ -3,7 +3,7 @@
 // new set is buried. Uses 60-second epochs via the dev-only x-epochsec header.
 // usage: node tools/check-epoch.mjs
 import assert from 'node:assert/strict';
-import { apiSignIn } from './wallet.mjs';
+import { apiEnter } from './wallet.mjs';
 import { rarityMix, seeded } from '../src/game.js';
 
 const BASE = 'http://localhost:5173';
@@ -16,7 +16,7 @@ for (const n of [20, 25, 30]) {
   assert.ok(c.common > c.uncommon && c.uncommon > c.rare, `rarer crates must be fewer (${JSON.stringify(c)})`);
 }
 
-const s = await apiSignIn(BASE);
+const s = await apiEnter(BASE);
 const post = async (path, body) => (await fetch(BASE + path, { method: 'POST', body: JSON.stringify(body), headers: { 'content-type': 'application/json', authorization: `Bearer ${s.token}`, ...H } })).json();
 await post('/api/player', { name: `Ep${Date.now().toString(36).slice(-6)}`, hero: 'Ranger' });
 

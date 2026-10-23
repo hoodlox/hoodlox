@@ -2,10 +2,10 @@
 // the leaderboard is the server's. usage: node tools/check-multiplayer.mjs
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
-import { useWallet } from './wallet.mjs';
+import { newAddress } from './wallet.mjs';
 
 const tag = Date.now().toString(36).slice(-4);
-const url = (name, hero) => `http://localhost:5173/map.html?scene=forest/Mining_Pack_Free.fbx&tex=PP_Color_Palette.png&animals=0&noshadow&arena=1&fresh=1&autoconnect=1&hero=${hero}&name=${name}`;
+const url = (name, hero) => `http://localhost:5173/map.html?scene=forest/Mining_Pack_Free.fbx&tex=PP_Color_Palette.png&animals=0&noshadow&arena=1&fresh=1&address=${newAddress()}&hero=${hero}&name=${name}`;
 const browser = await chromium.launch({
   executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe',
   args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
@@ -14,7 +14,6 @@ const open = async (name, hero) => {
   const ctx = await browser.newContext({ viewport: { width: 960, height: 600 } });
   const page = await ctx.newPage();
   page.on('pageerror', (e) => console.log(name, 'pageerror:', e.message));
-  await useWallet(page);
   await page.goto(url(name, hero), { waitUntil: 'commit' });
   await page.waitForFunction(() => window.__ready === true && window.__game, null, { timeout: 600000 });
   return page;

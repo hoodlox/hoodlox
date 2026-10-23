@@ -43,15 +43,6 @@ export async function holding(owner, token) {
   return Number(formatUnits(raw, await decimalsOf(token)));
 }
 
-// The $HOODL payment from the player to the vault, as a transaction request for the wallet to send.
-export async function purchaseTx(amountUi) {
-  return {
-    chainId: config.chainId,
-    to: config.hoodlToken,
-    data: encodeFunctionData({ abi: erc20Abi, functionName: 'transfer', args: [vaultAccount().address, await units(config.hoodlToken, amountUi)] }),
-  };
-}
-
 // True when `hash` is a successful transaction carrying at least amountUi $HOODL from `player` to the
 // vault. Replays are stopped by the purchases table (the hash is its primary key).
 export async function verifyPurchase(hash, player, amountUi) {

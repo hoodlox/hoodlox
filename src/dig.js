@@ -192,7 +192,7 @@ export function createDigging({ scene, player, sites, agent, onFound, onError = 
     if (job) {
       fill.style.width = `${(1 - Math.max(0, job.left) / job.total) * 100}%`;
       label.textContent = job.finishing ? 'Opening the ground…' : `Digging with ${tool(agent.equipped).name} · ${fmt(Math.max(0, job.left))}`;
-    } else if (agent.guest && near) btn.textContent = 'Connect a wallet to dig';
+    } else if (agent.guest && near) btn.textContent = 'Enter a wallet address to dig';
     else if (taken) btn.textContent = `${taken} is digging here`;
     else if (near) btn.textContent = `Dig here · ${fmt(tool(agent.equipped).seconds / (+new URLSearchParams(location.search).get('fastdig') || 1))} (E)`;
     // Chests rise for 1 s, hold, then sink back after 4 s (the real one is in the inventory).

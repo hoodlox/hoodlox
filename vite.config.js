@@ -1,7 +1,7 @@
 // Dev: the game API runs inside the Vite server (same router as Vercel, PGlite instead of Neon).
 // Build: every HTML page is an entry.
 import { defineConfig } from 'vite';
-import { existsSync, createReadStream } from 'node:fs';
+import { existsSync, createReadStream, renameSync } from 'node:fs';
 import { extname } from 'node:path';
 
 process.env.ALLOW_TEST_KNOBS ??= '1';
@@ -45,8 +45,15 @@ const api = () => ({
   },
 });
 
+// Vercel serves a static file before any rewrite, so a built index.html would answer "/" on every host,
+// play.hoodlox.fun included. The landing ships as landing.html and vercel.json routes "/" per host.
+const landingName = () => ({
+  name: 'landing-name',
+  writeBundle({ dir }) { if (existsSync(`${dir}/index.html`)) renameSync(`${dir}/index.html`, `${dir}/landing.html`); },
+});
+
 export default defineConfig({
-  plugins: [devAssets(), api()],
+  plugins: [devAssets(), api(), landingName()],
   server: { watch: { ignored: ['**/.data/**', '**/shots/**'] } },
   build: {
     rollupOptions: { input: { index: 'index.html', map: 'map.html', docs: 'docs.html' } },

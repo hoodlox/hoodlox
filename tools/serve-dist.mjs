@@ -20,7 +20,7 @@ createServer(async (req, res) => {
   }
   let path = decodeURIComponent(req.url.split('?')[0]);
   if (path === '/play') path = '/map.html';
-  if (path.endsWith('/')) path += 'index.html';
+  if (path === '/') path = '/landing.html';
   try {
     const body = await readFile(join('dist', normalize(path)));
     res.setHeader('content-type', TYPES[extname(path)] ?? 'application/octet-stream');

@@ -11,6 +11,7 @@
   "rewrites": [
     { "source": "/api/:p*", "destination": "/api?p=:p*" },
     { "source": "/", "has": [{ "type": "host", "value": "play.hoodlox.fun" }], "destination": "/map.html" },
+    { "source": "/", "destination": "/landing.html" },
     { "source": "/play", "destination": "/map.html" },
     { "source": "/docs", "destination": "/docs.html" }
   ],

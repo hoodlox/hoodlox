@@ -28,20 +28,21 @@ if (want('landing') || want('docs')) {
   await p.close();
 }
 
-// Gate: wallet step and the hero picker.
-if (want('gate-wallet') || want('gate-heroes')) {
+// Gate: the hero picker, then the same card filled in (name + wallet address), scrolled to the form.
+if (want('gate-heroes') || want('gate-form')) {
   const p = await browser.newPage({ viewport: VIEW });
   await p.goto(`${BASE}/map.html?scene=forest/Mining_Pack_Free.fbx&tex=PP_Color_Palette.png&animals=6&fresh=1`, { waitUntil: 'commit' });
   await p.addStyleTag({ content: HIDE }).catch(() => {});
-  await p.waitForSelector('.gate__step--wallet:not([hidden])', { timeout: 300000 });
+  await p.waitForSelector('.gate__addr', { timeout: 300000 });
   await p.waitForFunction(() => !document.querySelector('.gate__play').disabled, null, { timeout: 600000 });
-  await shot(p, 'gate-wallet');
-  await p.click('.gate__guest');
-  await p.waitForSelector('.gate__step--agent:not([hidden])');
   await p.click('.hero[data-hero="Knight"]');
-  await p.fill('.gate__name', 'Loxley');
   await p.waitForTimeout(800);
   await shot(p, 'gate-heroes');
+  await p.fill('.gate__name', 'Loxley');
+  await p.fill('.gate__addr', '0x8f3C9a2E41b7D05c6A19e2F4b38D7c0A5e61B2d9');
+  await p.evaluate(() => { const c = document.querySelector('.gate__card'); c.scrollTop = c.scrollHeight; });
+  await p.waitForTimeout(800);
+  await shot(p, 'gate-form');
   await p.close();
 }
 

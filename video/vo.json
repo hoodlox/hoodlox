@@ -1,7 +1,7 @@
 [
   { "id": "intro", "text": "Grab your shovel, hunter. This... is Hoodlox!", "rate": "+2%" },
   { "id": "world", "text": "A treasure hunt game on Robinhood Chain. One shared 3D valley, where every hunter plays together, live, right in your browser. On desktop, or on mobile." },
-  { "id": "gate", "text": "Getting started takes seconds. Connect your wallet, pick your hero, and give them a name." },
+  { "id": "gate", "silent": true, "text": "Getting started takes seconds. Pick your hero, give them a name, and paste your wallet address. No wallet connection. Nothing to sign." },
   { "id": "heroes", "text": "Six hunters to choose from. The Knight. The Ranger. The Mage. The Rogue. The Brute. And the Shade." },
   { "id": "controls", "text": "Move with W, A, S, D, or the joystick on mobile. Hold shift, or tap run, to sprint. Space to jump. And press V to switch between third and first person." },
   { "id": "epoch", "text": "Every two hours, a new epoch begins. Twenty to thirty crates are buried across the valley, and whatever is left from the last round, disappears." },

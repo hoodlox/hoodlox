@@ -231,7 +231,7 @@ scene('world', (el, w, cue, s) => {
 scene('gate', (el, w, cue) => {
   const ey = box($('div', 'eyebrow', el, 'Get started'), 110, 190);
   const t = box($('div', 'display', el, 'In <span class="grad">seconds</span>'), 110, 240); t.style.fontSize = '140px';
-  const steps = [['Connect', 'Connect wallet'], ['pick', 'Pick your hero'], ['give', 'Name your hunter']].map(([word, txt], i) => {
+  const steps = [['Pick', 'Pick your hero'], ['give', 'Name your hunter'], ['paste', 'Paste your wallet address']].map(([word, txt], i) => {
     const row = box($('div', '', el), 110, 450 + i * 130, 640, 104);
     const n = box($('div', 'display', row, String(i + 1)), 0, 0, 104, 104);
     n.style.cssText += `border-radius:50%;background:${['var(--lime)', 'var(--cyan)', 'var(--gold)'][i]};color:#0b0f20;font-size:64px;display:flex;align-items:center;justify-content:center;`;
@@ -239,17 +239,28 @@ scene('gate', (el, w, cue) => {
     return { row, at: w(word) };
   });
   const fr = box($('div', 'frame', el), 860, 150, 960, 540);
-  const g1 = img(SHOT('gate-wallet'), '', fr), g2 = img(SHOT('gate-heroes'), '', fr);
+  const g = img(SHOT('gate-form'), '', fr);
+  const ring = box($('div', '', fr), 0, 0, 0, 0); ring.style.cssText += 'border:5px solid var(--lime);border-radius:14px;box-shadow:0 0 30px var(--lime);';
+  const free = box($('div', 'sticker red', el, 'No connect · Nothing to sign'), 980, 730); free.style.fontSize = '46px';
+  // Camera stops on the 1920×1080 shot: [x, y, zoom] for the hero cards, the name field, the address field.
+  const stops = [[960, 420, 1.55], [960, 707, 2.3], [960, 788, 2.3]], k = 0.5; // shot → frame scale
+  const tNo = w('No');
   steps.forEach((s, i) => { cue(s.at, 'pop', 0.55, [1 + i * 0.15]); });
-  cue(0.4, 'swish', 0.5); cue(w('pick'), 'click', 0.6);
+  cue(0.4, 'swish', 0.5); cue(steps[1].at, 'whoosh', 0.35, [0.35]); cue(steps[2].at, 'whoosh', 0.35, [0.35]); cue(steps[2].at + 0.4, 'key', 0.6);
+  cue(tNo, 'stamp', 0.8); cue(tNo + 0.05, 'ding', 0.4, [1.5]);
   return (lt) => {
     slide(ey, lt, 0.2, 0, 30); stamp(t, lt, 0.35, -2);
     steps.forEach((s) => slide(s.row, lt, s.at - 0.05, -120, 0, 0.4));
     const p = prog(lt, 0.3, 0.7);
     fr.style.transform = `perspective(1600px) rotateY(${-14 * (1 - p) - 6}deg) translateX(${300 * (1 - p)}px) scale(${0.95 + 0.05 * p})`; fr.style.opacity = p;
-    g2.style.opacity = prog(lt, w('pick'), 0.4);
-    kb(g1, lt, 4, { s0: 1.6, s1: 1.75 });
-    kb(g2, lt - w('pick'), 4, { s0: 1.75, s1: 1.95, y0: 60, y1: 110 });
+    // Ease from stop to stop as the voice names each field.
+    const a = prog(lt, steps[1].at - 0.2, 0.6, E.inOut), b = prog(lt, steps[2].at - 0.2, 0.6, E.inOut);
+    const [x, y, s] = [0, 1, 2].map((j) => lerp(lerp(stops[0][j], stops[1][j], a), stops[2][j], b));
+    tf(g, { s, x: -(x * k - 480) * s, y: -(y * k - 270) * s });
+    // Highlight the address field once it is named (field box 705–1215 × 765–812 in the shot).
+    const fx = 480 + (705 * k - x * k) * s, fy = 270 + (765 * k - y * k) * s;
+    box(ring, fx - 6, fy - 6, 510 * k * s + 12, 47 * k * s + 12); ring.style.opacity = lt > steps[2].at + 0.3 ? 0.6 + 0.4 * Math.sin(lt * 6) ** 2 : 0;
+    stamp(free, lt, tNo, -3);
   };
 });
 

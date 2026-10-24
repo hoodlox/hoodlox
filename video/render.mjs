@@ -56,10 +56,11 @@ mkdirSync('video/out', { recursive: true });
 mixCues(cues, total, 'video/build/sfx.wav');
 const TL = (await import('./build/timeline.json', { with: { type: 'json' } })).default;
 const inputs = ['-framerate', String(FPS), '-i', join(dir, '%05d.jpg'), '-stream_loop', '-1', '-i', 'public/audio/treasure_hunter.mp3', '-i', 'video/build/sfx.wav'];
-const vo = TL.scenes.map((s, i) => { inputs.push('-i', s.file); const ms = Math.round((s.start + s.vo) * 1000); return `[${i + 3}:a]aresample=44100,adelay=${ms}|${ms},volume=1.7[v${i}]`; });
+const voiced = TL.scenes.filter((s) => s.file); // silent scenes have captions only
+const vo = voiced.map((s, i) => { inputs.push('-i', s.file); const ms = Math.round((s.start + s.vo) * 1000); return `[${i + 3}:a]aresample=44100,adelay=${ms}|${ms},volume=1.7[v${i}]`; });
 const filter = [
   ...vo,
-  `${TL.scenes.map((_, i) => `[v${i}]`).join('')}amix=inputs=${TL.scenes.length}:normalize=0,asplit[vo][key]`,
+  `${voiced.map((_, i) => `[v${i}]`).join('')}amix=inputs=${voiced.length}:normalize=0,asplit[vo][key]`,
   `[1:a]aresample=44100,volume=0.42,afade=t=in:d=1.5,afade=t=out:st=${(total - 3).toFixed(2)}:d=3[m]`,
   '[m][key]sidechaincompress=threshold=0.03:ratio=6:attack=40:release=500[md]',
   '[2:a]volume=0.9[fx]',

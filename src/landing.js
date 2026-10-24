@@ -55,6 +55,12 @@ $('.tools').innerHTML = TOOLS.map((t, i) => {
   </article>`;
 }).join('');
 
+// ── token CA: copy to clipboard ─────────────────────────────────────────
+$('.js-copyca').addEventListener('click', async (e) => {
+  try { await navigator.clipboard.writeText($('.js-ca').textContent); e.target.textContent = 'Copied ✓'; } catch { e.target.textContent = 'Select & copy'; }
+  setTimeout(() => { e.target.textContent = 'Copy'; }, 1800);
+});
+
 // Live numbers: this epoch's pool and who is in the valley right now.
 fetch('/api/epoch').then((r) => r.json()).then((ep) => {
   $('.js-balance').textContent = `${usd(ep.pool.reduce((a, p) => a + p.usd, 0))} pool`;

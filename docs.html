@@ -88,10 +88,11 @@
         <h2>Overview</h2>
         <p>Everyone plays on one map: a forest valley ringed by mountains. You walk a hunter around it in third or first person, and you see every other hunter who is online.</p>
         <ol class="steps">
+          <li><b>Enter</b> with a hunter, a name and your wallet address. No wallet connection, nothing to sign.</li>
           <li><b>Find</b> a crate sunk halfway into the grass. Faint golden motes drift up from it.</li>
           <li><b>Dig</b> it. Nobody else can dig that crate while you do. Your tool decides how long it takes.</li>
-          <li><b>Open</b> the chest from your inventory. It pays ETH, $HOODL or a Robinhood stock token out of the epoch's pool.</li>
-          <li><b>Redeem</b> your balances. The vault sends them to your wallet on Robinhood Chain.</li>
+          <li><b>Open</b> the chest from your inventory. It pays ETH, $HOODL or a Robinhood stock token out of the epoch's pool, into your game balance.</li>
+          <li><b>Redeem</b> your balance. The pool's vault sends it to the wallet address you entered, on Robinhood Chain.</li>
         </ol>
         <aside class="callout">
           <b>The short version</b>
@@ -107,6 +108,7 @@
         <div class="figure heroes" aria-label="Hunters"></div>
         <h3>2. Type your wallet address</h3>
         <p>Paste the Robinhood Chain (EVM) address that holds your $HOODL. There is no wallet connection and nothing to sign: the game never touches your wallet. Your rewards collect in the game pool and are sent to this address when you redeem. Next time, the same address brings back the same hunter.</p>
+        <p>Once $HOODL is live, the game reads your address's balance on Robinhood Chain when you enter: you need at least the minimum shown under <a href="#token">The $HOODL token</a> to hunt. Nothing is moved or locked; it only reads the balance.</p>
         <aside class="callout"><b>Double-check the address</b><p>Redeems go to exactly what you typed. Use an address you control, not an exchange deposit address or a contract.</p></aside>
         <h3>3. Enter the arena</h3>
         <p>The dashboard opens first. Press <em>Enter arena</em> to drop into the valley. Your session is remembered for 14 days on this browser.</p>
@@ -178,7 +180,14 @@
         <h2>Tools</h2>
         <p>Every hunter starts with a free shovel. Faster tools dig the same crates in less time, so you reach contested crates first. Tools are permanent and you can switch between the ones you own.</p>
         <div class="tools js-tools"></div>
-        <p>Prices are a share of the 1,000,000,000 $HOODL supply. To buy, the shop shows the vault address and the exact amount. Send that $HOODL from your own wallet app, from the address you play with, then paste the transaction hash into the shop. The server confirms it on-chain, then gives you the tool. One payment buys one tool.</p>
+        <p>Prices are a share of the 1,000,000,000 $HOODL supply. There is no wallet connection, so you pay yourself:</p>
+        <ol class="steps">
+          <li>Open the shop and press <em>Buy</em>. It shows the vault address and the exact $HOODL amount.</li>
+          <li>In your own wallet app, send that amount of $HOODL to the vault on Robinhood Chain, <b>from the address you play with</b>.</li>
+          <li>Copy the transaction hash (<code>0x…</code>), paste it into the shop and press <em>Confirm payment</em>.</li>
+          <li>The server checks the transfer on-chain (right token, right amount, from your address, to the vault) and gives you the tool.</li>
+        </ol>
+        <p>One payment buys one tool. A payment sent from another address does not count, and a hash cannot be used twice. In demo mode tools are bought with demo $HOODL in one click.</p>
       </section>
 
       <section id="chests">
@@ -213,7 +222,13 @@
       <section id="redeem">
         <p class="num">09</p>
         <h2>Redeeming</h2>
-        <p>Rewards collect as balances in your account. Open the dashboard, go to <em>Rewards</em>, and press <em>Redeem to wallet</em>.</p>
+        <p>How a reward reaches you:</p>
+        <ol class="steps">
+          <li><b>Pool first.</b> Every reward sits in the epoch pool, held by the game vault.</li>
+          <li><b>Your balance.</b> Opening a chest moves its value from the pool into your game balance. Nothing is sent yet.</li>
+          <li><b>Claim.</b> Open the dashboard, go to <em>Rewards</em>, and press <em>Redeem to wallet</em>, whenever you like.</li>
+          <li><b>Paid out.</b> The vault sends the balance to the wallet address you entered.</li>
+        </ol>
         <ul>
           <li>The vault sends one transfer per asset to the wallet address you entered. The vault pays the gas.</li>
           <li>Each redeem shows its status and a link to the transaction on the Blockscout explorer.</li>
@@ -241,7 +256,7 @@
           <li><b>Supply</b> 1,000,000,000 $HOODL.</li>
           <li><b>Buys tools</b>: the pickaxe and the drill are paid in $HOODL, a share of supply each.</li>
           <li><b>Is a reward</b>: part of every epoch pool is paid in $HOODL.</li>
-          <li><b>Can gate digging</b>: the game can require a minimum $HOODL holding to dig. Current minimum: <b class="js-minhold">…</b>.</li>
+          <li><b>Holders hunt</b>: the game can require a minimum $HOODL balance on the address you enter, checked when you enter and when you dig. It only reads the balance. Current minimum: <b class="js-minhold">…</b>.</li>
         </ul>
         <p class="js-tokenline"></p>
       </section>
@@ -251,6 +266,7 @@
         <h2>Fairness &amp; custody</h2>
         <p>Hoodlox runs on a game server with a vault wallet, not on a smart contract. Plainly:</p>
         <ul>
+          <li><b>No wallet connection.</b> You type an address; the game never asks to connect or sign. It can only ever pay that address, and only you can send tool payments from it.</li>
           <li><b>Secret rarities.</b> Where crates lie and what they hold come from a secret salt on the server. Your browser only learns a rarity after the dig is confirmed, so the map cannot be scraped for legendaries.</li>
           <li><b>One digger per crate.</b> Claims are a single database write; two hunters can never both get the same crate.</li>
           <li><b>Server-checked timing.</b> Dig times are measured on the server; a modified client cannot dig faster.</li>
@@ -304,7 +320,8 @@
           <dt>Claim</dt><dd>Your hold on a crate while you dig it.</dd>
           <dt>Pool</dt><dd>The ETH, $HOODL and stocks an epoch's crates pay out of.</dd>
           <dt>Vault</dt><dd>The wallet that holds the pools, receives tool payments and sends redeems.</dd>
-          <dt>Redeem</dt><dd>Moving your balances from the game to your wallet.</dd>
+          <dt>Wallet address</dt><dd>The Robinhood Chain address you type when you enter. It identifies your hunter and receives every redeem.</dd>
+          <dt>Redeem</dt><dd>Claiming your balance: the vault sends it from the pool to your wallet address.</dd>
           <dt>Demo mode</dt><dd>Before launch: $HOODL is simulated, tools cost demo $HOODL, and redeem is off.</dd>
         </dl>
         <p class="end">Good hunting. <a href="/play">Enter the valley →</a></p>

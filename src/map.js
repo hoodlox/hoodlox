@@ -232,7 +232,8 @@ if (q.has('scene')) {
       if (res.epoch !== sites.epoch) await loadEpoch();
       sites.applySync(res);
       agents.apply(res.players);
-      if (++ticks % 15 === 0) { refreshBoard().catch(() => {}); setMe((await api('/api/me')).me); }
+      if (++ticks % 10 === 1) api('/api/finds').then((r) => hud.finds(r.finds)).catch(() => {});
+      if (ticks % 15 === 0) { refreshBoard().catch(() => {}); setMe((await api('/api/me')).me); }
     };
     await Promise.all([loadEpoch(), refreshBoard()]);
     const loop = () => sync().catch(() => {}).finally(() => setTimeout(loop, 1000));

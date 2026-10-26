@@ -37,6 +37,7 @@ const MARKUP = `
 </header>
 
 <div class="sense" data-level="cold" role="status" aria-label="Treasure sense"><i></i><span>Treasure sense</span><b class="sense__label">Cold</b></div>
+<ol class="finds" aria-label="Latest finds"></ol>
 <aside class="panel board" hidden>
   <header class="panel__head"><b>Leaderboard · top profit</b><button class="panel__close" type="button" aria-label="Close">&times;</button></header>
   <ol class="board__list"></ol>
@@ -294,6 +295,15 @@ export function createHUD({ me, sites, player, onOpen = () => {}, onDash = () =>
   };
   if (player) setInterval(sense, 250);
 
+  // --- live finds feed: the latest chests anyone opened -------------------------------------------
+  const ago = (t) => { const s = Math.max(0, (Date.now() - t) / 1000); return s < 60 ? 'now' : s < 3600 ? `${Math.floor(s / 60)}m` : `${Math.floor(s / 3600)}h`; };
+  function finds(list) {
+    const html = list.filter((f) => Date.now() - f.at < 3 * 3600_000).slice(0, 4).map((f) => `
+      <li style="--r:${rarity(f.rarity).color}"><img src="${chestImg(f.rarity, true)}" alt="" />
+        <span><b>${f.name}</b> · ${rarity(f.rarity).name} · <em>${usd(f.usd)} ${f.asset}</em></span><small>${ago(f.at)}</small></li>`).join('');
+    if (html !== $('.finds').dataset.html) { $('.finds').dataset.html = html; $('.finds').innerHTML = html; } // no re-slide when nothing changed
+  }
+
   const tick = () => {
     $('.hud__epoch').textContent = epochLeft();
     $('.hud__sites').textContent = `${sites.left} / ${sites.total}`;
@@ -303,5 +313,5 @@ export function createHUD({ me, sites, player, onOpen = () => {}, onDash = () =>
   };
   tick();
   setInterval(tick, 1000);
-  return { found, renderBoard, renderMe, show, openChest, toast, buy };
+  return { found, finds, renderBoard, renderMe, show, openChest, toast, buy };
 }

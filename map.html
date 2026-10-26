@@ -117,9 +117,11 @@
       /* body-prefixed so they beat the base rules declared further down */
       body #ctl #view { top: calc(100px + env(safe-area-inset-top)); height: 30px !important; font-size: 12px !important; padding: 0 10px; }
       body .panel { top: calc(100px + env(safe-area-inset-top)); max-height: calc(100% - 116px - env(safe-area-inset-top)); }
-      body .toast { top: calc(140px + env(safe-area-inset-top)); }
+      body .toast { top: calc(214px + env(safe-area-inset-top)); }
       body .sense { left: 12px; transform: none; top: calc(100px + env(safe-area-inset-top)); padding: 4px 12px 4px 10px; }
       body .sense b { font-size: 15px; }
+      body .finds { left: 12px; top: calc(140px + env(safe-area-inset-top)); width: min(250px, 64vw); }
+      body .finds li:nth-child(n+3) { display: none; }
     }
     @media (max-width: 380px) { .hud__stats div:nth-child(3) { display: none; } }
 
@@ -201,6 +203,16 @@
     .sense[data-level="warm"] { --c: #f3c35a; } .sense[data-level="hot"] { --c: #ff8a3d; } .sense[data-level="burning"] { --c: #ff4d4d; } .sense[data-level="none"] { --c: var(--muted); }
     .sense[data-level="hot"] i { animation: beat .8s infinite alternate; } .sense[data-level="burning"] i { animation: beat .35s infinite alternate; }
     @keyframes beat { to { transform: scale(1.7); } }
+
+    /* latest finds by every hunter */
+    .finds { position: fixed; z-index: 19; left: 14px; top: 70px; width: 300px; margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; pointer-events: none; }
+    .finds li { display: flex; align-items: center; gap: 8px; padding: 5px 10px 5px 6px; border-radius: 12px; background: rgba(15,16,22,.8); border: 1px solid var(--line);
+      border-left: 3px solid var(--r); font-size: 12px; animation: slidein .4s ease; }
+    .finds img { width: 26px; height: 26px; object-fit: contain; }
+    .finds span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .finds em { font-style: normal; color: var(--gold); }
+    .finds small { color: var(--muted); font-size: 10px; }
+    @keyframes slidein { from { opacity: 0; transform: translateX(-12px); } }
     a.btn { text-align: center; text-decoration: none; }
 
     /* found / reveal modals */

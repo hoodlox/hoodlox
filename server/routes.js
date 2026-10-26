@@ -278,6 +278,12 @@ const routes = {
     };
   },
 
+  // The live finds feed: the latest chests anyone opened (public, like the leaderboard).
+  'GET /api/finds': async () => ({
+    finds: (await q(`select p.name, p.hero, c.rarity, c.asset, c.amount, c.usd, c.opened_at from chests c join players p on p.id = c.player
+      where c.opened_at is not null and c.asset is not null order by c.opened_at desc limit 6`))
+      .map((f) => ({ name: f.name, hero: f.hero, rarity: f.rarity, asset: f.asset, amount: f.amount, usd: f.usd, at: new Date(f.opened_at).getTime() })),
+  }),
   'GET /api/leaderboard': async (ctx) => {
     const id = verify(ctx.headers.authorization);
     const top = await q(`select id, name, hero, profit_usd, treasures from players where id not like 'guest:%'

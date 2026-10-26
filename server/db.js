@@ -31,6 +31,7 @@ create table if not exists chests (
   asset text, amount double precision, usd double precision
 );
 create index if not exists chests_player on chests (player, opened_at);
+create index if not exists chests_opened on chests (opened_at desc);
 create table if not exists pools (
   epoch int not null, asset text not null,
   funded double precision not null, paid double precision not null default 0,

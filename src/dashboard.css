@@ -73,6 +73,9 @@ body.dash-open #ctl, body.dash-open #dig, body.dash-open .hud { display: none; }
 .rw { display: grid; grid-template-columns: minmax(240px, 340px) minmax(0, 1fr); gap: 14px; }
 .rw__total .btn-lime { margin-top: 8px; align-self: flex-start; }
 .rw__note { font-size: 11px !important; text-transform: none !important; letter-spacing: 0 !important; }
+.rw__to { margin-top: 10px !important; padding-top: 10px; border-top: 1px solid var(--line); font-size: 12px !important; text-transform: none !important; letter-spacing: 0 !important; }
+.rw__to b { color: var(--text); }
+.rw__to .link { margin-left: 8px; }
 .rw__bal { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; align-content: start; }
 .rw__bal li { display: flex; flex-direction: column; gap: 2px; padding: 14px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); }
 .rw__bal .asset { font: 11px 'JetBrains Mono', monospace; color: var(--muted); }

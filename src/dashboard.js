@@ -78,6 +78,7 @@ export function createDashboard({ me, sites, hud }) {
           <b class="display js-redeemable"></b>
           <button class="btn-lime js-redeem" type="button">Redeem to wallet</button>
           <p class="mono rw__note js-redeemnote"></p>
+          <p class="mono rw__to js-payto"></p>
         </div>
         <ul class="rw__bal js-balances"></ul>
       </div>
@@ -195,6 +196,13 @@ export function createDashboard({ me, sites, hud }) {
     $('.js-balances').innerHTML = bal.length
       ? bal.map(([a, n]) => `<li><span class="asset">${a}${me.payable?.[a] ? '' : ' · held'}</span><b class="mono">${amount(a, n)}</b><span class="mono muted">${usd(n * price(a))}</span></li>`).join('')
       : '<li class="muted mono">Nothing yet. Open a chest to fill this up.</li>';
+    // Where redeems go: the address the hunter entered with.
+    const to = $('.js-payto');
+    if (guest) to.innerHTML = '';
+    else if (to.dataset.id !== me.id) {
+      to.dataset.id = me.id;
+      to.innerHTML = `Paid to <b>${short(me.id)}</b> <button class="link js-copyto" type="button">Copy</button> <a class="link" href="${live.config?.explorer ?? 'https://robinhoodchain.blockscout.com'}/address/${me.id}" target="_blank" rel="noopener">Blockscout ↗</a>`;
+    }
     $('.js-redeem').disabled = guest || !ready.length || redeeming;
     $('.js-redeem').textContent = redeeming ? 'Sending…' : 'Redeem to wallet';
     if (!redeeming) {
@@ -211,6 +219,11 @@ export function createDashboard({ me, sites, hud }) {
         ${c.signature ? `<a class="link" href="${explorer(c.signature)}" target="_blank" rel="noopener">tx</a>` : `<span class="muted">${c.status}</span>`}</span><b class="mono">${usd(c.usd)}</b></li>`).join('')
       || '<li class="muted mono">Nothing redeemed yet.</li>';
   }
+  $('.js-payto').addEventListener('click', async (e) => {
+    if (!e.target.closest('.js-copyto')) return;
+    try { await navigator.clipboard.writeText(me.id); e.target.textContent = 'Copied ✓'; } catch { e.target.textContent = me.id; }
+    setTimeout(() => { e.target.textContent = 'Copy'; }, 1800);
+  });
   $('.js-redeem').addEventListener('click', async () => {
     redeeming = true;
     renderRewards();

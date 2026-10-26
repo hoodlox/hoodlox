@@ -697,6 +697,7 @@ const drawCap = (t) => {
 // --- render ---------------------------------------------------------------------------------------
 window.__total = TL.total;
 window.__cues = cues.sort((a, b) => a.t - b.t);
+window.__voice = TL.scenes.filter((s) => s.file).map((s) => ({ file: s.file, at: s.start + s.vo }));
 window.__render = (t) => {
   drawBg(t);
   for (const s of scenes) {

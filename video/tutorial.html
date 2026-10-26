@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Hoodlox how to play</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@500;600;700;800&family=JetBrains+Mono:wght@500;700&display=block" rel="stylesheet" />
+<style>
+  :root { --lime: #a6f25d; --cyan: #3fd6ff; --gold: #f3c35a; --red: #ff5a5f; --ink: #0d1a05; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #000; }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #0b0f20; color: #fff; font-family: Inter, sans-serif; }
+  #stage div, #stage img, #stage svg { position: absolute; }
+  .display { font-family: Anton, sans-serif; text-transform: uppercase; line-height: .9; white-space: nowrap; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .grad { background: linear-gradient(100deg, var(--cyan), var(--lime) 70%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .sticker { font: 400 40px Anton, sans-serif; text-transform: uppercase; padding: 10px 24px 8px; border-radius: 14px; background: var(--lime); color: var(--ink); box-shadow: 0 8px 0 rgba(0,0,0,.35), 0 20px 40px rgba(0,0,0,.45); white-space: nowrap; }
+  .sticker.cyan { background: var(--cyan); color: #04202a; } .sticker.gold { background: var(--gold); color: #2a1a00; } .sticker.red { background: var(--red); color: #fff; }
+  .world { left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+  .shot { left: 0; top: 0; width: 1920px; height: 1080px; }
+  .ring { border: 6px solid var(--lime); border-radius: 18px; box-shadow: 0 0 0 6px rgba(166,242,93,.25), 0 0 40px var(--lime); }
+  .ring.round { border-radius: 50%; }
+  .cursor { width: 64px; height: 64px; }
+  .ripple { width: 90px; height: 90px; border-radius: 50%; border: 6px solid #fff; }
+  .typed { font: 500 15px 'JetBrains Mono', monospace; color: #e8eaf0; display: flex; align-items: center; padding-left: 13px; background: #0e0f14; border-radius: 12px; white-space: nowrap; overflow: hidden; }
+  .patch { display: flex; align-items: center; justify-content: center; border-radius: 999px; background: #a6f25d; color: #10200a; font: 600 15px Inter, sans-serif; }
+  .chip { left: 56px; top: 48px; display: flex; align-items: center; gap: 18px; padding: 14px 26px 14px 14px; border-radius: 22px; background: rgba(9,11,24,.88); border: 2px solid rgba(255,255,255,.12); box-shadow: 0 20px 50px rgba(0,0,0,.5); }
+  .chip b { position: static; width: 74px; height: 74px; border-radius: 18px; background: var(--lime); color: var(--ink); font: 400 46px Anton, sans-serif; display: flex; align-items: center; justify-content: center; }
+  .chip span { position: static; font: 400 46px Anton, sans-serif; text-transform: uppercase; }
+  .chip small { position: static; display: block; font: 700 18px 'JetBrains Mono', monospace; color: var(--lime); letter-spacing: .12em; text-transform: uppercase; }
+  .cap { left: 0; right: 0; bottom: 46px; display: flex; justify-content: center; }
+  .cap p { position: static; margin: 0; max-width: 1500px; font: 700 38px Inter, sans-serif; text-align: center; padding: 14px 32px 16px; border-radius: 20px; background: rgba(8,10,22,.86); }
+  .cap p em { font-style: normal; color: var(--lime); }
+  .key { width: 96px; height: 96px; border-radius: 18px; background: linear-gradient(#f4f6ff, #c9cfe6); color: #141a33; font: 400 52px Anton, sans-serif; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 0 #6b7395, 0 20px 30px rgba(0,0,0,.5); }
+  .coin { width: 46px; height: 46px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff6c8, #f7cf4a 35%, #c98a12 75%); box-shadow: inset 0 0 0 4px rgba(150,95,0,.55); }
+  .shade { inset: 0; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script type="module">
+const B = await (await fetch('/video/shots/tut.json')).json();
+const stage = document.getElementById('stage');
+const cues = [];
+const $ = (tag, cls, parent, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; (parent ?? stage).appendChild(e); return e; };
+const at = (el, x, y, w, h) => { el.style.left = `${x}px`; el.style.top = `${y}px`; if (w != null) el.style.width = `${w}px`; if (h != null) el.style.height = `${h}px`; return el; };
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, p) => a + (b - a) * p;
+const ease = (p) => (p < 0.5 ? 4 * p ** 3 : 1 - (-2 * p + 2) ** 3 / 2);
+const out = (p) => 1 - (1 - p) ** 3;
+const spring = (k) => (k <= 0 ? 0 : 1 - Math.exp(-7 * k) * Math.cos(14 * k));
+const tf = (el, { x = 0, y = 0, s = 1, r = 0, o = 1 }) => { el.style.transform = `translate(${x}px,${y}px) rotate(${r}deg) scale(${s})`; el.style.opacity = o; };
+const pop = (el, lt, t0, r = 0) => { const k = lt - t0; tf(el, { s: k <= 0 ? 0 : spring(k), o: clamp(k / 0.08), r }); };
+const center = (b) => [b[0] + b[2] / 2, b[1] + b[3] / 2];
+const SHOT = (n) => `/video/shots/tut-${n}.png`;
+const CURSOR = '<svg viewBox="0 0 24 24" width="64" height="64" style="position:static;filter:drop-shadow(0 4px 6px rgba(0,0,0,.6))"><path d="M4 2l16 9.5-7 1.6 4.2 7.6-3 1.6-4.2-7.7L4 19z" fill="#fff" stroke="#111" stroke-width="1.4" stroke-linejoin="round"/></svg>';
+
+// --- scene engine ----------------------------------------------------------------------------------
+// Each scene: full-screen screenshots under a camera (shot pixel space), with a cursor, rings, typed
+// text and patches drawn in the same space, plus a step chip and an instruction caption on top.
+const scenes = [];
+let T = 0;
+function scene(dur, build) {
+  const el = $('div', '', stage); el.style.inset = '0'; el.style.display = 'none';
+  const start = T; T += dur;
+  const cue = (t, name, vol = 1, args) => cues.push({ t: +(start + t).toFixed(3), name, vol, args });
+  scenes.push({ start, dur, el, draw: build(el, cue, dur) });
+}
+// Camera keyframes [t, x, y, zoom]; shots [t, name]; cursor keyframes [t, x, y, click?].
+function shotScene(el, cue, { shots, cam, cursor = [], rings = [], extra }) {
+  const world = $('div', 'world', el);
+  const imgs = shots.map(([t, n]) => { const i = $('img', 'shot', world); i.src = SHOT(n); return { i, t }; });
+  const ringEls = rings.map((r) => ({ ...r, el: at($('div', `ring${r.round ? ' round' : ''}`, world), r.box[0] - 10, r.box[1] - 10, r.box[2] + 20, r.box[3] + 20) }));
+  const rip = $('div', 'ripple', world), cur = $('div', 'cursor', world, CURSOR);
+  rings.forEach((r) => cue(r.t0, 'pop', 0.4, [1.3]));
+  cursor.filter((c) => c[3]).forEach((c) => cue(c[0], 'click', 0.9));
+  const camAt = (lt) => {
+    let i = 0; while (i < cam.length - 1 && lt >= cam[i + 1][0]) i++;
+    const a = cam[i], b = cam[Math.min(i + 1, cam.length - 1)];
+    const p = b === a ? 0 : ease(clamp((lt - a[0]) / (b[0] - a[0])));
+    return [lerp(a[1], b[1], p), lerp(a[2], b[2], p), lerp(a[3], b[3], p)];
+  };
+  const curAt = (lt) => {
+    if (!cursor.length || lt < cursor[0][0] - 0.4 || lt > cursor.at(-1)[0] + 0.9) return null; // gone after its last move
+    let i = 0; while (i < cursor.length - 1 && lt >= cursor[i + 1][0] - 0.7) i++;
+    const a = cursor[i], b = cursor[Math.min(i + 1, cursor.length - 1)];
+    const p = b === a ? 0 : out(clamp((lt - (b[0] - 0.7)) / 0.6));
+    return [lerp(a[1], b[1], p), lerp(a[2], b[2], p)];
+  };
+  const ex = extra?.(world);
+  return (lt) => {
+    const [x, y, z] = camAt(lt);
+    world.style.transform = `translate(960px,540px) scale(${z}) translate(${-x}px,${-y}px)`;
+    imgs.forEach((s, k) => { s.i.style.opacity = k === 0 ? 1 : clamp((lt - s.t) / 0.25); });
+    ringEls.forEach((r) => { const on = lt >= r.t0 && lt < (r.t1 ?? 1e9); r.el.style.opacity = on ? 0.55 + 0.45 * Math.sin((lt - r.t0) * 6) ** 2 : 0; });
+    const c = curAt(lt);
+    cur.style.opacity = c ? 1 : 0;
+    if (c) { const press = cursor.some((k) => k[3] && lt >= k[0] && lt < k[0] + 0.15); at(cur, c[0] - 8, c[1] - 6); cur.style.transform = `scale(${(press ? 0.85 : 1) / z})`; cur.style.transformOrigin = '8px 6px'; }
+    const click = [...cursor].reverse().find((k) => k[3] && lt >= k[0]);
+    const rk = click ? lt - click[0] : 9;
+    rip.style.opacity = rk < 0.5 ? 1 - rk / 0.5 : 0;
+    if (click) { at(rip, click[1] - 45, click[2] - 45); rip.style.transform = `scale(${(0.3 + rk * 2.2) / z})`; }
+    ex?.(lt, z);
+  };
+}
+// Step chip + caption, shared by every step.
+function chrome(el, n, title, caption) {
+  const chip = $('div', 'chip', el, `<b>${n}</b><div style="position:static"><small>Step ${n} of 9</small><span>${title}</span></div>`);
+  const cap = $('div', 'cap', el, `<p>${caption}</p>`);
+  return (lt) => { pop(chip, lt, 0.15); tf(cap, { y: 40 * (1 - out(clamp((lt - 0.3) / 0.4))), o: clamp((lt - 0.3) / 0.3) }); };
+}
+const stepScene = (dur, n, title, caption, spec) => scene(dur, (el, cue, d) => {
+  const draw = shotScene(el, cue, typeof spec === 'function' ? spec(cue) : spec);
+  const ch = chrome(el, n, title, caption);
+  cue(0.12, 'pop', 0.5, [1 + n * 0.05]);
+  return (lt) => { draw(lt); ch(lt); };
+});
+const typer = (parent, b, text, t0, t1) => {
+  const e = at($('div', 'typed', parent), b[0] + 2, b[1] + 2, b[2] - 4, b[3] - 4);
+  return (lt) => { const n = Math.round(clamp((lt - t0) / (t1 - t0)) * text.length); e.textContent = text.slice(0, n) + (lt > t0 - 0.3 && lt < t1 + 0.6 && Math.floor(lt * 2.5) % 2 ? '|' : ''); e.style.opacity = lt > t0 - 0.4 ? 1 : 0; };
+};
+
+// --- background for title cards ---------------------------------------------------------------------
+const bgCard = (el) => { const b = $('div', '', el); b.style.cssText += 'inset:0;background:radial-gradient(1200px 700px at 20% 10%, #1b2552, transparent),radial-gradient(1000px 700px at 90% 100%, #1d1446, transparent),#0b0f20;'; };
+
+// 0. Title ------------------------------------------------------------------------------------------
+scene(4.2, (el, cue) => {
+  bgCard(el);
+  const logo = at($('img', '', el), 960 - 90, 200, 180, 180); logo.src = '/brand/logo-512.png';
+  const t = at($('div', 'display', el, 'How to <span class="grad">play</span>'), 0, 420, 1920); t.style.cssText += 'font-size:170px;text-align:center;';
+  const s = at($('div', 'mono', el, 'From hunter to wallet in 9 steps'), 0, 620, 1920); s.style.cssText += 'font-size:36px;text-align:center;color:#c3c8d2;';
+  const tags = ['Pick', 'Dig', 'Open', 'Claim'].map((w, i) => { const e = at($('div', `sticker${['', ' cyan', ' gold', ''][i]}`, el, w), 520 + i * 230, 720); e.style.fontSize = '46px'; return e; });
+  cue(0.2, 'boom', 0.7); cue(0.3, 'sparkle', 0.4); tags.forEach((_, i) => cue(1.2 + i * 0.18, 'pop', 0.5, [1 + i * 0.1]));
+  return (lt) => { pop(logo, lt, 0.2); pop(t, lt, 0.45); tf(s, { y: 30 * (1 - out(clamp((lt - 0.8) / 0.4))), o: clamp((lt - 0.8) / 0.3) }); tags.forEach((e, i) => pop(e, lt, 1.2 + i * 0.18, [-3, 2, -2, 3][i])); };
+});
+
+// 1. Choose your hunter -----------------------------------------------------------------------------
+const mage = center(B.mage);
+stepScene(5.4, 1, 'Choose your hunter', 'Open <em>play.hoodlox.fun</em> and tap a hunter card. All six play the same.', {
+  shots: [[0, 'gate'], [2.3, 'gate-mage']],
+  cam: [[0, 960, 470, 1.45], [5.4, 960, 450, 1.6]],
+  cursor: [[1.0, 1250, 760], [2.2, mage[0], mage[1], true]],
+  rings: [{ t0: 2.3, box: B.mage }],
+});
+
+// 2. Name your hunter -------------------------------------------------------------------------------
+stepScene(5.2, 2, 'Name your hunter', 'Type a name: <em>2 to 16</em> letters or numbers. It shows on the leaderboard.', (cue) => {
+  for (let i = 0; i < B.nameText.length; i++) cue(1.5 + i * 0.13, 'key', 0.35);
+  return {
+    shots: [[0, 'form']],
+    cam: [[0, 960, 640, 1.8], [5.2, 960, 720, 2.0]],
+    cursor: [[0.6, 1100, 600], [1.2, B.name[0] + 120, B.name[1] + 23, true]],
+    rings: [{ t0: 1.2, box: B.name }],
+    extra: (w) => { const ty = typer(w, B.name, B.nameText, 1.5, 1.5 + B.nameText.length * 0.13); return (lt) => ty(lt); },
+  };
+});
+
+// 3. Paste your wallet address ----------------------------------------------------------------------
+stepScene(7.2, 3, 'Paste your wallet address', 'Paste the address that holds your <em>$HOODL</em>. Rewards are sent there. No connect, nothing to sign.', (cue) => {
+  cue(1.4, 'key', 0.7); cue(1.45, 'swish', 0.4); cue(2.4, 'stamp', 0.8); cue(5.7, 'whoosh', 0.4, [0.4]);
+  return {
+    shots: [[0, 'form'], [4.6, 'form-filled']],
+    cam: [[0, 960, 720, 2.0], [4.4, 960, 760, 2.1], [5.4, 960, 800, 1.7], [7.2, 960, 800, 1.6]],
+    cursor: [[0.4, B.addr[0] + 150, B.addr[1] - 40], [1.0, B.addr[0] + 120, B.addr[1] + 23, true], [5.6, center(B.play)[0], center(B.play)[1], true]],
+    rings: [{ t0: 1.0, t1: 5.4, box: B.addr }, { t0: 5.6, box: B.play }],
+    extra: (w) => {
+      const nm = typer(w, B.name, B.nameText, -1, -0.5), ad = typer(w, B.addr, B.addrText, 1.4, 1.42);
+      const st = at($('div', 'sticker red', w, 'No connect · Nothing to sign'), B.addr[0] - 20, B.addr[1] + 62); st.style.fontSize = '22px';
+      return (lt, z) => { if (lt < 4.6) { nm(lt); ad(lt); } else { nm(-9); ad(-9); } pop(st, lt, 2.4, -2); st.style.opacity = lt > 2.4 && lt < 5.3 ? 1 : 0; };
+    },
+  };
+});
+
+// 4. Enter the arena ---------------------------------------------------------------------------------
+stepScene(4.6, 4, 'Enter the arena', 'Your dashboard opens first. Press <em>Enter arena</em> to drop into the valley.', {
+  shots: [[0, 'dash']],
+  cam: [[0, 960, 540, 1.0], [2.0, 1300, 300, 1.35], [4.6, 1500, 200, 1.6]],
+  cursor: [[1.2, 1400, 400], [2.6, center(B.enter)[0], center(B.enter)[1], true]],
+  rings: [{ t0: 2.6, box: B.enter }],
+});
+
+// 5. Find a crate -------------------------------------------------------------------------------------
+const cN = B.chest_near, cW = B.chest_walk2;
+stepScene(7.6, 5, 'Find a crate', 'Walk with <em>WASD</em> or the joystick. Look for a chest <em>half sunk in the grass</em> with faint golden sparkles.', (cue) => {
+  ['W', 'W', 'W'].forEach((_, i) => cue(0.6 + i * 0.5, 'key', 0.4));
+  cue(3.6, 'swish', 0.4); cue(4.4, 'ding', 0.45, [1.3]);
+  return {
+    shots: [[0, 'walk2'], [3.6, 'near']],
+    cam: [[0, cW[0], cW[1] + 120, 1.1], [3.5, cW[0], cW[1] + 60, 1.35], [3.6, cN[0], cN[1] - 40, 1.2], [7.6, cN[0], cN[1], 1.55]],
+    rings: [{ t0: 1.6, t1: 3.6, box: [cW[0] - 40, cW[1] - 35, 80, 70], round: true }, { t0: 4.4, box: [cN[0] - 60, cN[1] - 55, 120, 110], round: true }],
+    extra: (w) => {
+      const keys = ['W', 'A', 'S', 'D'].map((k, i) => at($('div', 'key', w.parentNode, k), [140, 32, 140, 248][i], [610, 718, 718, 718][i]));
+      const tag = at($('div', 'sticker gold', w, 'Crate!'), cN[0] + 70, cN[1] - 130); tag.style.fontSize = '30px';
+      return (lt) => {
+        keys.forEach((k, i) => { k.style.display = lt > 0.3 && lt < 3.5 ? 'flex' : 'none'; const press = i === 0 && Math.floor((lt - 0.6) / 0.5) >= 0 && ((lt - 0.6) % 0.5) < 0.15; k.style.transform = `translateY(${press ? 8 : 0}px)`; });
+        pop(tag, lt, 4.4, -4);
+      };
+    },
+  };
+});
+
+// 6. Dig ---------------------------------------------------------------------------------------------
+stepScene(7.4, 6, 'Dig it up', 'Stand next to it and press <em>E</em> (or tap <em>Dig here</em>). Nobody else can dig that crate while you do.', (cue) => {
+  cue(1.9, 'key', 0.8); cue(2.3, 'dig', 0.7); cue(3.6, 'dig', 0.55); cue(4.9, 'dig', 0.5); cue(2.4, 'lock', 0.5);
+  return {
+    shots: [[0, 'digbtn'], [2.4, 'digging']],
+    cam: [[0, 960, 700, 1.35], [2.3, 960, 820, 1.7], [7.4, 960, 860, 1.9]],
+    cursor: [[0.8, 1150, 760], [1.9, center(B.digbtn)[0], center(B.digbtn)[1], true]],
+    rings: [{ t0: 0.9, t1: 2.4, box: B.digbtn }],
+    extra: (w) => {
+      const btn = at($('div', 'patch', w, 'Dig here · 1:00 (E)'), ...B.digbtn);
+      const bar = B.digbar;
+      const lbl = at($('div', 'patch', w, ''), bar[0] + 20, bar[1] + 8, bar[2] - 40, 22); lbl.style.cssText += 'background:#1a1c24;color:#e8eaf0;font:500 14px "JetBrains Mono",monospace;border-radius:6px;';
+      const fill = at($('div', '', w), bar[0] + 12, bar[1] + 36, 0, 7); fill.style.cssText += 'background:var(--lime);border-radius:4px;';
+      const track = at($('div', '', w), bar[0] + 12, bar[1] + 36, bar[2] - 24, 7); track.style.cssText += 'background:rgba(255,255,255,.12);border-radius:4px;'; w.appendChild(fill);
+      const tools = at($('div', 'sticker cyan', w, 'Shovel 1:00 · Pickaxe 0:30 · Drill 0:15'), bar[0] - 120, bar[1] - 90); tools.style.fontSize = '24px';
+      return (lt) => {
+        btn.style.opacity = lt < 2.4 ? 1 : 0;
+        const on = lt >= 2.4, secs = Math.max(0, 60 - Math.max(0, lt - 2.4) * 12);
+        [lbl, fill, track].forEach((e) => { e.style.opacity = on ? 1 : 0; });
+        lbl.textContent = `Digging with Rusty Shovel · 0:${String(Math.ceil(secs)).padStart(2, '0')}`;
+        fill.style.width = `${(bar[2] - 24) * (1 - secs / 60)}px`;
+        pop(tools, lt, 3.4, -2);
+      };
+    },
+  };
+});
+
+// 7. Chest found ---------------------------------------------------------------------------------------
+stepScene(5.0, 7, 'You found a chest', 'Its rarity shows when the dig ends. Rarer chests pay more. It goes to your <em>inventory</em>.', (cue) => {
+  cue(0.4, 'sparkle', 0.5); cue(0.4, 'ding', 0.5, [1.2]);
+  return {
+    shots: [[0, 'found']],
+    cam: [[0, 960, 540, 1.3], [1.4, 960, 540, 1.9], [5.0, 960, 560, 2.0]],
+    cursor: [[2.2, 1060, 760], [3.4, center(B.foundbag)[0], center(B.foundbag)[1], true]],
+    rings: [{ t0: 3.4, box: B.foundbag }],
+  };
+});
+
+// 8. Open it --------------------------------------------------------------------------------------------
+const bagC = center(B.bagpanel), rev = center(B.revealcard);
+stepScene(7.2, 8, 'Open it', 'In the inventory press <em>Open</em>. The chest pays <em>ETH</em> from the epoch pool into your balance.', (cue) => {
+  cue(2.3, 'chest', 0.8); cue(2.4, 'kaching', 0.6); cue(5.9, 'coin', 0.5);
+  return {
+    shots: [[0, 'bag'], [2.3, 'reveal']],
+    cam: [[0, 1300, 400, 1.3], [1.0, bagC[0], bagC[1], 2.0], [2.2, bagC[0], bagC[1], 2.1], [2.3, rev[0], rev[1], 1.6], [7.2, rev[0], rev[1], 1.95]],
+    cursor: [[0.9, B.open[0] - 120, B.open[1] + 120], [1.8, center(B.open)[0], center(B.open)[1], true], [5.9, center(B.collect)[0], center(B.collect)[1], true]],
+    rings: [{ t0: 1.8, t1: 2.3, box: B.open }, { t0: 3.0, t1: 5.9, box: [B.revealcard[0] + 20, B.revealcard[1] + 220, B.revealcard[2] - 40, 70] }],
+    extra: (w) => {
+      const flash = $('div', 'shade', w.parentNode); flash.style.cssText += 'background:#fff;opacity:0;';
+      const coins = Array.from({ length: 18 }, (_, i) => ({ e: $('div', 'coin', w), a: (i / 18) * Math.PI * 2, v: 260 + (i % 5) * 70 }));
+      return (lt) => {
+        flash.style.opacity = lt >= 2.3 && lt < 2.7 ? (2.7 - lt) / 0.4 * 0.8 : 0;
+        const k = lt - 2.35;
+        coins.forEach((c) => { if (k < 0 || k > 1.6) { c.e.style.opacity = 0; return; } at(c.e, rev[0] - 23 + Math.cos(c.a) * c.v * k, rev[1] - 80 + Math.sin(c.a) * c.v * k + 500 * k * k); c.e.style.opacity = clamp(1.6 - k); });
+      };
+    },
+  };
+});
+
+// 9. Claim to your wallet ----------------------------------------------------------------------------
+stepScene(9.2, 9, 'Claim to your wallet', 'Dashboard → <em>Rewards</em> → <em>Redeem to wallet</em>. The vault sends it to your address, on-chain.', (cue) => {
+  cue(4.2, 'kaching', 0.7); cue(4.9, 'stamp', 0.7); cue(5.0, 'ding', 0.4, [1.6]);
+  return {
+    shots: [[0, 'dash2'], [1.5, 'rewards'], [4.1, 'redeemed']],
+    cam: [[0, 500, 300, 1.4], [1.4, 500, 300, 1.6], [2.0, 700, 330, 1.8], [4.0, 700, 330, 1.8], [4.6, 1100, 420, 1.45], [9.2, 1150, 430, 1.6]],
+    cursor: [[0.4, 420, 380], [1.2, center(B.tabrewards)[0], center(B.tabrewards)[1], true], [3.2, center(B.redeem)[0], center(B.redeem)[1], true]],
+    rings: [{ t0: 1.2, t1: 1.5, box: B.tabrewards }, { t0: 2.0, t1: 4.0, box: B.redeem }, { t0: 4.6, box: B.claimed }],
+    extra: (w) => {
+      const st = at($('div', 'sticker', w, 'Sent to your wallet ✓'), B.claimed[0] + 120, B.claimed[1] - 110); st.style.fontSize = '30px';
+      return (lt) => pop(st, lt, 4.9, -3);
+    },
+  };
+});
+
+// 10. Outro -------------------------------------------------------------------------------------------
+scene(5.2, (el, cue, d) => {
+  bgCard(el);
+  const logo = at($('img', '', el), 960 - 80, 170, 160, 160); logo.src = '/brand/logo-512.png';
+  const t = at($('div', 'display', el, 'You are <span class="grad">ready</span>'), 0, 370, 1920); t.style.cssText += 'font-size:150px;text-align:center;';
+  const p = at($('div', 'sticker', el, 'play.hoodlox.fun'), 0, 560, 1920); p.style.cssText += 'width:auto;left:50%;font-size:64px;';
+  const s = at($('div', 'mono', el, 'Hold $HOODL · Dig · Open · Claim'), 0, 700, 1920); s.style.cssText += 'font-size:32px;text-align:center;color:#c3c8d2;';
+  const black = $('div', 'shade', el); black.style.background = '#000';
+  cue(0.2, 'boom', 0.6); cue(1.0, 'pop', 0.6); cue(1.1, 'fanfare', 0.5);
+  return (lt) => { pop(logo, lt, 0.2); pop(t, lt, 0.4); const k = lt - 1.0; p.style.transform = `translateX(-50%) scale(${k <= 0 ? 0 : spring(k)}) rotate(-2deg)`; p.style.opacity = k > 0 ? 1 : 0; tf(s, { o: clamp((lt - 1.5) / 0.3) }); black.style.opacity = clamp((lt - (d - 0.8)) / 0.7); };
+});
+
+// --- wipes between scenes ---------------------------------------------------------------------------
+const wipe = at($('div', '', stage), -500, -100, 2900, 1280);
+const bands = [0, 1, 2].map((i) => at($('div', '', wipe), i * 180, 0, 2900 - i * 360, 1280));
+const COLORS = [['var(--lime)', 'var(--cyan)'], ['var(--cyan)', '#8b5cff'], ['var(--gold)', 'var(--lime)']];
+const cuts = scenes.slice(1).map((s) => s.start);
+cuts.forEach((b) => cues.push({ t: +(b - 0.3).toFixed(3), name: 'whoosh', vol: 0.5, args: [0.55] }));
+const drawWipe = (t) => {
+  const i = cuts.findIndex((b) => Math.abs(t - b) < 0.3);
+  if (i < 0) { wipe.style.display = 'none'; return; }
+  wipe.style.display = 'block';
+  const [c1, c2] = COLORS[i % COLORS.length]; bands[0].style.background = c1; bands[1].style.background = c2; bands[2].style.background = '#0b0f20';
+  const p = ease(clamp((t - cuts[i] + 0.3) / 0.6)), dir = i % 2 ? -1 : 1;
+  wipe.style.transform = `translateX(${dir * lerp(-3400, 3400, p)}px) skewX(-18deg)`;
+};
+
+window.__total = T;
+window.__cues = cues.sort((a, b) => a.t - b.t);
+window.__voice = [];
+window.__render = (t) => {
+  for (const s of scenes) { const lt = t - s.start, on = lt >= 0 && lt < s.dur; s.el.style.display = on ? 'block' : 'none'; if (on) s.draw(lt); }
+  drawWipe(t);
+};
+await document.fonts.ready;
+await Promise.all([...document.images].map((i) => (i.complete ? 0 : new Promise((r) => { i.onload = i.onerror = r; }))));
+window.__render(+(new URLSearchParams(location.search).get('t') ?? 0));
+window.__ready = true;
+</script>
+</body>
+</html>

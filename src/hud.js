@@ -38,6 +38,7 @@ const MARKUP = `
 
 <div class="sense" data-level="cold" role="status" aria-label="Treasure sense"><i></i><span>Treasure sense</span><b class="sense__label">Cold</b></div>
 <ol class="finds" aria-label="Latest finds"></ol>
+
 <aside class="panel board" hidden>
   <header class="panel__head"><b>Leaderboard · top profit</b><button class="panel__close" type="button" aria-label="Close">&times;</button></header>
   <ol class="board__list"></ol>
@@ -273,7 +274,7 @@ export function createHUD({ me, sites, player, onOpen = () => {}, onDash = () =>
     $('.reveal__title').textContent = res.reward ? `+${amount(res.reward.asset, res.reward.amount)} ${res.reward.asset}` : 'Empty: this epoch’s pool is spent';
     $('.reveal__usd').textContent = res.reward ? `≈ ${usd(res.reward.usd)}` : '';
     if (res.reward) {
-      const text = `I just dug up ${/^[AEIOU]/.test(r.name) ? 'an' : 'a'} ${r.name} chest in Hoodlox and won ${usd(res.reward.usd)} in ${res.reward.asset} ⛏️\n\nHold ${TOKEN}, dig crates, claim to your wallet 👇`;
+      const text = `I just dug up ${/^[AEIOU]/.test(r.name) ? 'an' : 'a'} ${r.name} chest in Hoodlox and won ${usd(res.reward.usd)} in ${res.reward.asset} ⛏️\n\nHold $${TOKEN}, dig crates, claim to your wallet 👇`;
       $('.reveal__share').href = `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent('https://play.hoodlox.fun')}`;
       $('.reveal__share').hidden = false;
     }
@@ -304,10 +305,15 @@ export function createHUD({ me, sites, player, onOpen = () => {}, onDash = () =>
     if (html !== $('.finds').dataset.html) { $('.finds').dataset.html = html; $('.finds').innerHTML = html; } // no re-slide when nothing changed
   }
 
+  // --- epoch: the countdown turns red in the last 5 minutes, with one warning -----------------------
+  let warned = null;
   const tick = () => {
     $('.hud__epoch').textContent = epochLeft();
     $('.hud__sites').textContent = `${sites.left} / ${sites.total}`;
     $('.hud__online').textContent = live.online;
+    const left = (live.epoch?.endsAt ?? 0) - (Date.now() + live.skew), ending = left > 0 && left < 300_000;
+    $('.hud__epoch').parentElement.classList.toggle('is-ending', ending);
+    if (ending && warned !== live.epoch.epoch) { warned = live.epoch.epoch; toast('5 minutes left in this epoch. Digs still running when it ends come up empty.'); }
     badge();
     if (!$('.me').hidden) renderMe();
   };

@@ -213,6 +213,10 @@
     .finds em { font-style: normal; color: var(--gold); }
     .finds small { color: var(--muted); font-size: 10px; }
     @keyframes slidein { from { opacity: 0; transform: translateX(-12px); } }
+
+    /* last 5 minutes of an epoch */
+    .hud__stats .is-ending b { color: #ff6b6b; animation: blink 1s steps(2) infinite; }
+    @keyframes blink { 50% { opacity: .45; } }
     a.btn { text-align: center; text-decoration: none; }
 
     /* found / reveal modals */

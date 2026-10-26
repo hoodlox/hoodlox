@@ -229,7 +229,11 @@ if (q.has('scene')) {
       last = { d: player.stats.distance, s: player.stats.seconds };
       live.skew = res.now - Date.now();
       live.online = res.players.length + 1;
-      if (res.epoch !== sites.epoch) await loadEpoch();
+      if (res.epoch !== sites.epoch) {
+        await loadEpoch();
+        hud.toast(`New epoch #${res.epoch}: ${sites.total} fresh crates buried in the valley!`);
+        sfx.found();
+      }
       sites.applySync(res);
       agents.apply(res.players);
       if (++ticks % 10 === 1) api('/api/finds').then((r) => hud.finds(r.finds)).catch(() => {});

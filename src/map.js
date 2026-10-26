@@ -206,7 +206,7 @@ if (q.has('scene')) {
     sites = createDigSites(scene, groundAt);
     sfx = createSfx();
     let dash = null;
-    const hud = createHUD({ me: agent, sites, onOpen: () => setTimeout(sfx.coins, 1100), onDash: () => dash.open() });
+    const hud = createHUD({ me: agent, sites, player, onOpen: () => setTimeout(sfx.coins, 1100), onDash: () => dash.open() });
     digging = createDigging({ scene, player, sites, agent, onFound: (chest) => { sfx.found(); hud.found(chest); }, onError: hud.toast });
     agents = createRemotePlayers(scene, groundAt);
 

@@ -36,6 +36,7 @@ const MARKUP = `
   </div>
 </header>
 
+<div class="sense" data-level="cold" role="status" aria-label="Treasure sense"><i></i><span>Treasure sense</span><b class="sense__label">Cold</b></div>
 <aside class="panel board" hidden>
   <header class="panel__head"><b>Leaderboard · top profit</b><button class="panel__close" type="button" aria-label="Close">&times;</button></header>
   <ol class="board__list"></ol>
@@ -94,7 +95,7 @@ const MARKUP = `
 </div>
 </div>`;
 
-export function createHUD({ me, sites, onOpen = () => {}, onDash = () => {} }) {
+export function createHUD({ me, sites, player, onOpen = () => {}, onDash = () => {} }) {
   const wrap = el(MARKUP);
   document.body.appendChild(wrap);
   const $ = (s) => wrap.querySelector(s);
@@ -274,6 +275,18 @@ export function createHUD({ me, sites, onOpen = () => {}, onDash = () => {} }) {
     renderBag();
   }
   $('.reveal__ok').addEventListener('click', () => { $('.reveal').hidden = true; });
+
+  // --- treasure sense: how close the nearest buried crate is, never which way ------------------------
+  const SENSE = [[800, 'Burning', 'burning'], [2000, 'Hot', 'hot'], [4500, 'Warm', 'warm'], [Infinity, 'Cold', 'cold']]; // cm
+  const sense = () => {
+    const p = player.obj.position;
+    let d = Infinity;
+    for (const s of sites.sites) if (s.live) d = Math.min(d, Math.hypot(s.at.x - p.x, s.at.z - p.z));
+    const [, label, level] = Number.isFinite(d) ? SENSE.find(([max]) => d < max) : [0, 'All dug · new crates soon', 'none'];
+    $('.sense').dataset.level = level;
+    $('.sense__label').textContent = label;
+  };
+  if (player) setInterval(sense, 250);
 
   const tick = () => {
     $('.hud__epoch').textContent = epochLeft();

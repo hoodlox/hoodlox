@@ -118,6 +118,8 @@
       body #ctl #view { top: calc(100px + env(safe-area-inset-top)); height: 30px !important; font-size: 12px !important; padding: 0 10px; }
       body .panel { top: calc(100px + env(safe-area-inset-top)); max-height: calc(100% - 116px - env(safe-area-inset-top)); }
       body .toast { top: calc(140px + env(safe-area-inset-top)); }
+      body .sense { left: 12px; transform: none; top: calc(100px + env(safe-area-inset-top)); padding: 4px 12px 4px 10px; }
+      body .sense b { font-size: 15px; }
     }
     @media (max-width: 380px) { .hud__stats div:nth-child(3) { display: none; } }
 
@@ -187,8 +189,18 @@
     .history img { width: 34px; height: 34px; object-fit: contain; }
     .history b { font-variant-numeric: tabular-nums; }
 
-    .toast { position: fixed; z-index: 60; left: 50%; top: 70px; transform: translateX(-50%); max-width: min(440px, calc(100% - 24px));
+    .toast { position: fixed; z-index: 60; left: 50%; top: 112px; transform: translateX(-50%); max-width: min(440px, calc(100% - 24px));
       padding: 10px 16px; border-radius: 12px; background: rgba(15,16,22,.94); border: 1px solid var(--line); color: var(--text); font-size: 13px; text-align: center; }
+
+    /* treasure sense: cold → burning as the nearest crate gets closer */
+    .sense { --c: #5aa8ff; position: fixed; z-index: 21; left: 50%; top: 66px; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 6px 16px 6px 12px;
+      border-radius: 999px; background: rgba(15,16,22,.86); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); pointer-events: none; white-space: nowrap; }
+    .sense span { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+    .sense b { font: 400 18px 'Anton', Impact, sans-serif; text-transform: uppercase; letter-spacing: .02em; color: var(--c); }
+    .sense i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: 0 0 12px var(--c); }
+    .sense[data-level="warm"] { --c: #f3c35a; } .sense[data-level="hot"] { --c: #ff8a3d; } .sense[data-level="burning"] { --c: #ff4d4d; } .sense[data-level="none"] { --c: var(--muted); }
+    .sense[data-level="hot"] i { animation: beat .8s infinite alternate; } .sense[data-level="burning"] i { animation: beat .35s infinite alternate; }
+    @keyframes beat { to { transform: scale(1.7); } }
 
     /* found / reveal modals */
     .modal { position: fixed; z-index: 50; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(8,9,12,.6); backdrop-filter: blur(3px); }

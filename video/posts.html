@@ -46,6 +46,17 @@ const POSTS = {
     shot: ['/media/hoodlox-tutorial.jpg', 1080, -180, 0], play: true, commit: 'c708b3c' },
   5: { tag: 'Update · Token', cls: 'red', h: '$HOODL CA on <em>hoodlox.fun</em>', sub: 'The contract address now sits on the landing page, with one-tap copy and a Blockscout link. Hold $HOODL to hunt.',
     shot: ['/video/shots/post-landing.png', 1560, -420, -340], stick: [['Copy CA', 'gold', 1000, 600, 4]], commit: 'a0aab4a' },
+  // Second batch: game features.
+  6: { tag: 'New · Treasure sense', cls: 'red', h: 'Cold. Warm. <em>Burning.</em>', sub: 'A new meter tells you how close the nearest buried crate is. Distance only, never direction, so the hunt stays a hunt.',
+    shot: ['/video/shots/upd-newepoch.png', 1600, -440, -30], meter: true, commit: '73bb654' },
+  7: { tag: 'New · Share', cls: 'cyan', h: 'Flex your <em>loot</em>', sub: 'Open a chest and post it to X in one tap. Rarity and reward are filled in for you.',
+    shot: ['/video/shots/upd-share.png', 2080, -680, -380], stick: [['Share on X', 'cyan', 960, 640, -4]], commit: '729f3d9' },
+  8: { tag: 'New · Live feed', cls: '', h: 'See every <em>find</em> live', sub: 'The latest chests any hunter opens, right in your HUD: who, which rarity, and how much ETH or USDG.',
+    shot: ['/video/shots/upd-newepoch.png', 3200, -10, -110], stick: [['● Live', 'red', 1380, 90, 6]], commit: 'ac44097' },
+  9: { tag: 'New · Payouts', cls: 'gold', h: 'Know where it <em>lands</em>', sub: 'The Rewards tab now shows the exact address your redeems go to, with copy and a Blockscout link.',
+    shot: ['/video/shots/upd-payto.png', 2560, -360, -230], stick: [['Paid to you', '', 980, 640, -3]], commit: '81a11e8' },
+  10: { tag: 'New · Epoch alerts', cls: 'red', h: '5 minutes <em>left!</em>', sub: 'The clock turns red near the end of an epoch, with a heads-up, and a toast tells you when fresh crates are buried.',
+    shot: ['/video/shots/upd-ending.png', 1840, -570, -60], stick: [['New crates every 2h', 'gold', 940, 650, -3]], commit: 'a39d1fb' },
 };
 const p = POSTS[new URLSearchParams(location.search).get('n') ?? 1];
 const card = document.getElementById('card');
@@ -62,6 +73,8 @@ card.innerHTML = `
     <div class="coin" style="left:930px;top:190px;width:300px;height:300px;background:linear-gradient(140deg,#7b8cff,#4b55c9)"><b>ETH</b><span>50%</span></div>
     <div class="coin" style="left:1190px;top:400px;width:300px;height:300px;background:linear-gradient(140deg,#3fa9f5,#1f5fbf)"><b>USDG</b><span>50%</span></div>
     <div class="sticker" style="left:960px;top:730px;background:var(--lime);color:var(--ink);transform:rotate(-3deg)">≈ $4.6 per epoch</div>` : ''}
+  ${p.meter ? `<div style="position:absolute;left:880px;top:740px;display:flex;gap:12px">${[['Cold', '#5aa8ff', 0.75], ['Warm', '#f3c35a', 0.85], ['Hot', '#ff8a3d', 0.95], ['Burning', '#ff4d4d', 1.1]].map(([t, c, s], i) =>
+    `<div class="sticker" style="position:relative;background:${c};color:#10131f;transform:rotate(${[-4, 2, -2, 4][i]}deg) scale(${s})">${t}</div>`).join('')}</div>` : ''}
   ${(p.stick ?? []).map(([t, c, x, y, r]) => `<div class="sticker" style="left:${x}px;top:${y}px;transform:rotate(${r}deg);background:var(--${c || 'lime'});color:${c === 'red' ? '#fff' : 'var(--ink)'}">${t}</div>`).join('')}`;
 document.fonts.ready.then(() => Promise.all([...document.images].map((i) => i.complete ? 0 : new Promise((r) => { i.onload = i.onerror = r; })))).then(() => { window.__ready = true; });
 </script>

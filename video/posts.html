@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Hoodlox update cards</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@500;700;800&family=JetBrains+Mono:wght@500;700&display=block" rel="stylesheet" />
+<style>
+  :root { --lime: #a6f25d; --cyan: #3fd6ff; --gold: #f3c35a; --red: #ff5a5f; --ink: #0d1a05; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #000; }
+  .card { position: relative; width: 1600px; height: 900px; overflow: hidden; color: #fff; font-family: Inter, sans-serif;
+    background: radial-gradient(900px 600px at 15% 0%, #1b2552, transparent), radial-gradient(900px 600px at 100% 100%, #1d1446, transparent), #0b0f20; }
+  .card::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,.045) 2px, transparent 2px), linear-gradient(90deg, rgba(255,255,255,.045) 2px, transparent 2px); background-size: 80px 80px; }
+  .left { position: absolute; left: 80px; top: 76px; width: 700px; }
+  .brand { display: flex; align-items: center; gap: 14px; font: 800 30px Inter; }
+  .brand img { width: 58px; height: 58px; }
+  .tag { display: inline-block; margin-top: 46px; padding: 8px 18px 6px; border-radius: 12px; background: var(--lime); color: var(--ink); font: 400 30px Anton; letter-spacing: .02em; text-transform: uppercase; box-shadow: 0 6px 0 rgba(0,0,0,.35); }
+  .tag.cyan { background: var(--cyan); color: #04202a; } .tag.gold { background: var(--gold); color: #2a1a00; } .tag.red { background: var(--red); color: #fff; }
+  h1 { margin: 26px 0 0; font: 400 104px/0.92 Anton; text-transform: uppercase; }
+  h1 em { font-style: normal; background: linear-gradient(100deg, var(--cyan), var(--lime) 70%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .sub { margin: 26px 0 0; font: 500 27px/1.4 Inter; color: #c9cede; max-width: 640px; }
+  .foot { position: absolute; left: 80px; bottom: 60px; display: flex; gap: 14px; align-items: center; font: 700 22px 'JetBrains Mono'; color: #9aa3b8; }
+  .foot b { color: var(--lime); font-weight: 700; }
+  .shot { position: absolute; right: 70px; top: 120px; width: 720px; height: 600px; border-radius: 28px; overflow: hidden; border: 4px solid rgba(255,255,255,.16);
+    box-shadow: 0 40px 90px rgba(0,0,0,.6), 0 0 0 12px rgba(166,242,93,.07); transform: perspective(1800px) rotateY(-8deg) rotateZ(1deg); background: #000; }
+  .shot img { position: absolute; }
+  .sticker { position: absolute; padding: 10px 22px 8px; border-radius: 14px; font: 400 34px Anton; text-transform: uppercase; box-shadow: 0 8px 0 rgba(0,0,0,.35), 0 20px 40px rgba(0,0,0,.45); white-space: nowrap; }
+  .coin { position: absolute; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-direction: column; box-shadow: 0 0 0 10px rgba(255,255,255,.07), 0 30px 60px rgba(0,0,0,.5); }
+  .coin b { font: 400 54px Anton; } .coin span { font: 700 20px 'JetBrains Mono'; opacity: .85; }
+  .play { position: absolute; left: 50%; top: 50%; width: 130px; height: 130px; margin: -65px 0 0 -65px; border-radius: 50%; background: rgba(166,242,93,.95); box-shadow: 0 0 0 16px rgba(166,242,93,.25); }
+  .play::after { content: ''; position: absolute; left: 50px; top: 37px; border-left: 48px solid #0d1a05; border-top: 28px solid transparent; border-bottom: 28px solid transparent; }
+</style>
+</head>
+<body>
+<div class="card" id="card"></div>
+<script>
+// One card per update; ?n=1..5. Screenshots are cropped by placing them inside the .shot window.
+const POSTS = {
+  1: { tag: 'Update · Access', cls: '', h: 'No wallet <em>connection</em>', sub: 'Pick a hunter, type your wallet address, play. Nothing to connect, nothing to sign. Rewards are sent to the address you typed.',
+    shot: ['/video/shots/tut-form-filled.png', 1500, -470, -265], stick: [['Paste address', 'cyan', 980, 620, -4]], commit: 'b13ed17' },
+  2: { tag: 'Update · Rewards', cls: 'cyan', h: 'ETH + <em>USDG</em> rewards', sub: 'Every 2-hour epoch pool is now split 50/50 between ETH and USDG, the Global Dollar stablecoin on Robinhood Chain.',
+    coins: true, commit: '0be9d82' },
+  3: { tag: 'Update · Pool', cls: 'gold', h: 'The pool never <em>overpromises</em>', sub: 'Each epoch is capped to what the vault really holds, minus unclaimed rewards and gas. Demo balances were cleared before going live.',
+    shot: ['/video/shots/tut-dash.png', 1500, -150, -250], stick: [['Capped to the vault', '', 930, 640, -3]], commit: 'aa7faa0' },
+  4: { tag: 'Update · Guide', cls: 'cyan', h: 'How to play in <em>68 seconds</em>', sub: 'A step-by-step video: hunter, address, find a crate, dig, open, claim. Watch or download it in the docs.',
+    shot: ['/media/hoodlox-tutorial.jpg', 1080, -180, 0], play: true, commit: 'c708b3c' },
+  5: { tag: 'Update · Token', cls: 'red', h: '$HOODL CA on <em>hoodlox.fun</em>', sub: 'The contract address now sits on the landing page, with one-tap copy and a Blockscout link. Hold $HOODL to hunt.',
+    shot: ['/video/shots/post-landing.png', 1560, -420, -340], stick: [['Copy CA', 'gold', 1000, 600, 4]], commit: 'a0aab4a' },
+};
+const p = POSTS[new URLSearchParams(location.search).get('n') ?? 1];
+const card = document.getElementById('card');
+card.innerHTML = `
+  <div class="left">
+    <div class="brand"><img src="/brand/logo-180.png" alt="" />Hoodlox</div>
+    <span class="tag ${p.cls}">${p.tag}</span>
+    <h1>${p.h}</h1>
+    <p class="sub">${p.sub}</p>
+  </div>
+  <div class="foot"><b>play.hoodlox.fun</b><span>·</span><span>commit ${p.commit}</span></div>
+  ${p.shot ? `<div class="shot"><img src="${p.shot[0]}" style="width:${p.shot[1]}px;left:${p.shot[2]}px;top:${p.shot[3]}px" />${p.play ? '<div class="play"></div>' : ''}</div>` : ''}
+  ${p.coins ? `
+    <div class="coin" style="left:930px;top:190px;width:300px;height:300px;background:linear-gradient(140deg,#7b8cff,#4b55c9)"><b>ETH</b><span>50%</span></div>
+    <div class="coin" style="left:1190px;top:400px;width:300px;height:300px;background:linear-gradient(140deg,#3fa9f5,#1f5fbf)"><b>USDG</b><span>50%</span></div>
+    <div class="sticker" style="left:960px;top:730px;background:var(--lime);color:var(--ink);transform:rotate(-3deg)">≈ $4.6 per epoch</div>` : ''}
+  ${(p.stick ?? []).map(([t, c, x, y, r]) => `<div class="sticker" style="left:${x}px;top:${y}px;transform:rotate(${r}deg);background:var(--${c || 'lime'});color:${c === 'red' ? '#fff' : 'var(--ink)'}">${t}</div>`).join('')}`;
+document.fonts.ready.then(() => Promise.all([...document.images].map((i) => i.complete ? 0 : new Promise((r) => { i.onload = i.onerror = r; })))).then(() => { window.__ready = true; });
+</script>
+</body>
+</html>

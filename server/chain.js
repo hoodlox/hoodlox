@@ -25,7 +25,7 @@ export function vaultAccount() {
   return vault;
 }
 
-export const tokenOf = (asset) => (asset === TOKEN ? config.hoodlToken : config.stockTokens[asset] ?? null);
+export const tokenOf = (asset) => (asset === TOKEN ? config.hoodlToken : asset === 'USDG' ? config.usdgToken : config.stockTokens[asset] ?? null);
 // Assets the vault can actually pay out right now.
 export const payable = (asset) => !!vaultAccount() && (asset === 'ETH' || !!tokenOf(asset));
 export const checksum = (a) => (isAddress(a) ? getAddress(a) : null);

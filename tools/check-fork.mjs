@@ -35,14 +35,26 @@ const vault = privateKeyToAccount(vaultKey), player = privateKeyToAccount(player
 for (const a of [vault.address, player.address, stranger.address, HOLDER]) await test.setBalance({ address: a, value: parseEther('1') });
 await test.impersonateAccount({ address: HOLDER });
 const holder = createWalletClient({ account: HOLDER, chain, transport: http(RPC) });
+Object.assign(process.env, {
+  RPC_URL: RPC, VAULT_KEY: vaultKey, HOODL_TOKEN: HOODL, HOODL_MIN_HOLD: '1000000', POOL_ETH: '5', POOL_USDG: '3', POOL_HOODL: '2000000', POOL_STOCK_USD: '0',
+  PGLITE_DIR: mkdtempSync(join(tmpdir(), 'th-fork-')), ALLOW_TEST_KNOBS: '1',
+});
+
+// USDG first, while the fork's block is fresh: the public RPC only serves recent blocks, so storage the
+// USDG proxy has not touched yet cannot be read a minute into the run. The same holder has USDG
+// (6 decimals): 10 into the vault, then one 1.25 USDG redeem item to the player.
+const USDG = '0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168';
+const usdgOf = (a) => pub.readContract({ address: USDG, abi: erc20Abi, functionName: 'balanceOf', args: [a] });
 for (const [to, n] of [[player.address, '5000000'], [vault.address, '5000000'], [stranger.address, '2000000']]) {
   await pub.waitForTransactionReceipt({ hash: await holder.writeContract({ address: HOODL, abi: erc20Abi, functionName: 'transfer', args: [to, parseUnits(n, 18)] }) });
 }
+await pub.waitForTransactionReceipt({ hash: await holder.writeContract({ address: USDG, abi: erc20Abi, functionName: 'transfer', args: [vault.address, parseUnits('10', 6)] }) });
+const usdgBefore = await usdgOf(player.address);
+const { sendPayout } = await import('../server/chain.js');
+await sendPayout(player.address, { asset: 'USDG', amount: 1.25 });
+assert.equal(await usdgOf(player.address) - usdgBefore, 1_250_000n, 'USDG payout sends 1.25 USDG');
+console.log('USDG payout ok');
 
-Object.assign(process.env, {
-  RPC_URL: RPC, VAULT_KEY: vaultKey, HOODL_TOKEN: HOODL, HOODL_MIN_HOLD: '1000000', POOL_ETH: '5', POOL_HOODL: '2000000', POOL_STOCK_USD: '0',
-  PGLITE_DIR: mkdtempSync(join(tmpdir(), 'th-fork-')), ALLOW_TEST_KNOBS: '1',
-});
 // A demo-era balance left in the database must be wiped when the game first runs live.
 const { q } = await import('../server/db.js');
 await q(`insert into balances (player, asset, amount) values ('0xDemo', 'ETH', 3)`);
@@ -63,6 +75,7 @@ assert.equal((await q('select count(*)::int as n from balances'))[0].n, 0, 'goin
 const ethPool = (await call('/api/epoch')).pool.find((p) => p.asset === 'ETH').funded;
 console.log('epoch ETH pool (asked 5, vault holds 1):', ethPool);
 assert.ok(ethPool > 0.99 && ethPool <= 0.998, 'pool is capped to the vault minus gas');
+assert.equal((await call('/api/epoch')).pool.find((p) => p.asset === 'USDG').funded, 3, 'USDG pool funded from the vault (8.75 left, asked 3)');
 
 // 1. Enter with the address only. Holders get in; an empty wallet and the vault itself do not.
 const nobody = privateKeyToAccount(generatePrivateKey()).address;

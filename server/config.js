@@ -31,7 +31,8 @@ export const config = {
   minHold: Number(env.HOODL_MIN_HOLD ?? 0),    // $HOODL (ui units) a wallet must hold to dig
   stockTokens: env.STOCK_TOKENS ? JSON.parse(env.STOCK_TOKENS) : STOCKS, // { "TSLA": "0x…", ... }
   // What each 2-hour epoch's crates pay out in total.
-  pool: { ETH: Number(env.POOL_ETH ?? 0.015), HOODL: Number(env.POOL_HOODL ?? 2_000_000), STOCK_USD: Number(env.POOL_STOCK_USD ?? 25) },
+  pool: { ETH: Number(env.POOL_ETH ?? 0.015), USDG: Number(env.POOL_USDG ?? 0), HOODL: Number(env.POOL_HOODL ?? 2_000_000), STOCK_USD: Number(env.POOL_STOCK_USD ?? 25) },
+  usdgToken: env.USDG_TOKEN ?? '0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168', // Global Dollar (Paxos), 6 decimals
   epochSeconds: Number(env.EPOCH_SECONDS ?? 7200),
   demoTokens: Number(env.DEMO_TOKENS ?? 3_500_000),
   cronSecret: env.CRON_SECRET ?? null,

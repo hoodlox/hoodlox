@@ -62,7 +62,7 @@ export function rarityMix(n, rnd) {
 }
 
 // Fallback USD prices (when the live price feed is down). The server prefers live ones.
-export const PRICES = { ETH: 2500, [TOKEN]: 0.00002, TSLA: 380, NVDA: 180, AAPL: 230, SPY: 640 };
+export const PRICES = { ETH: 2500, USDG: 1, [TOKEN]: 0.00002, TSLA: 380, NVDA: 180, AAPL: 230, SPY: 640 }; // USDG is a $1 stablecoin
 
 // Level from chests found: 5 chests per level.
 export const CHESTS_PER_LEVEL = 5;

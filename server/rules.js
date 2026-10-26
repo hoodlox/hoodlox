@@ -35,10 +35,11 @@ export function layout(n) {
 }
 export const publicLayout = (n) => layout(n).crates.map(({ i, x, z }) => ({ i, x, z }));
 
-// Pool assets for an epoch, in the units they are paid in. STOCK_USD is a dollar budget paid out as
-// tokenized stocks.
+// Pool assets for an epoch, in the units they are paid in. USDG is the dollar stablecoin; STOCK_USD is a
+// dollar budget paid out as tokenized stocks.
 export const poolAssets = () => [
   { asset: 'ETH', funded: config.pool.ETH },
+  { asset: 'USDG', funded: config.pool.USDG },
   { asset: TOKEN, funded: config.pool.HOODL },
   { asset: 'STOCK_USD', funded: config.pool.STOCK_USD },
 ];

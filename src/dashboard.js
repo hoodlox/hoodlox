@@ -9,7 +9,7 @@ import { api, live, setMe } from './net.js';
 import { chestImg, epochLeft } from './hud.js';
 
 const el = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; };
-const POOL_COLORS = { ETH: '#7b5cff', [TOKEN]: '#f07850', Stocks: '#2f9e6a' };
+const POOL_COLORS = { ETH: '#7b5cff', USDG: '#3fa9f5', [TOKEN]: '#f07850', Stocks: '#2f9e6a' };
 const face = (hero) => `--p:url(${portrait(hero)});--c:${HERO_CARD[hero].color}`;
 const SECTIONS = [
   ['overview', 'Overview'], ['rewards', 'Rewards'], ['pool', 'Pool & Epoch'],

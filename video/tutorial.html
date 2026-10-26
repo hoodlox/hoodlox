@@ -155,7 +155,7 @@ stepScene(5.2, 2, 'Name your hunter', 'Type a name: <em>2 to 16</em> letters or 
 });
 
 // 3. Paste your wallet address ----------------------------------------------------------------------
-stepScene(7.2, 3, 'Paste your wallet address', 'Paste the address that holds your <em>$HOODL</em>. Rewards are sent there. No connect, nothing to sign.', (cue) => {
+stepScene(7.2, 3, 'Paste your wallet address', 'Paste your Robinhood Chain wallet address. <em>Rewards are sent there.</em> No connect, nothing to sign.', (cue) => {
   cue(1.4, 'key', 0.7); cue(1.45, 'swish', 0.4); cue(2.4, 'stamp', 0.8); cue(5.7, 'whoosh', 0.4, [0.4]);
   return {
     shots: [[0, 'form'], [4.6, 'form-filled']],
@@ -278,7 +278,7 @@ scene(5.2, (el, cue, d) => {
   const logo = at($('img', '', el), 960 - 80, 170, 160, 160); logo.src = '/brand/logo-512.png';
   const t = at($('div', 'display', el, 'You are <span class="grad">ready</span>'), 0, 370, 1920); t.style.cssText += 'font-size:150px;text-align:center;';
   const p = at($('div', 'sticker', el, 'play.hoodlox.fun'), 0, 560, 1920); p.style.cssText += 'width:auto;left:50%;font-size:64px;';
-  const s = at($('div', 'mono', el, 'Hold $HOODL · Dig · Open · Claim'), 0, 700, 1920); s.style.cssText += 'font-size:32px;text-align:center;color:#c3c8d2;';
+  const s = at($('div', 'mono', el, 'Free to play · Dig · Open · Claim'), 0, 700, 1920); s.style.cssText += 'font-size:32px;text-align:center;color:#c3c8d2;';
   const black = $('div', 'shade', el); black.style.background = '#000';
   cue(0.2, 'boom', 0.6); cue(1.0, 'pop', 0.6); cue(1.1, 'fanfare', 0.5);
   return (lt) => { pop(logo, lt, 0.2); pop(t, lt, 0.4); const k = lt - 1.0; p.style.transform = `translateX(-50%) scale(${k <= 0 ? 0 : spring(k)}) rotate(-2deg)`; p.style.opacity = k > 0 ? 1 : 0; tf(s, { o: clamp((lt - 1.5) / 0.3) }); black.style.opacity = clamp((lt - (d - 0.8)) / 0.7); };

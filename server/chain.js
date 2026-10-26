@@ -30,6 +30,12 @@ export const tokenOf = (asset) => (asset === TOKEN ? config.hoodlToken : config.
 export const payable = (asset) => !!vaultAccount() && (asset === 'ETH' || !!tokenOf(asset));
 export const checksum = (a) => (isAddress(a) ? getAddress(a) : null);
 
+// What the vault holds of one asset right now (ui units).
+export async function vaultHolds(asset) {
+  const v = vaultAccount().address;
+  return asset === 'ETH' ? Number(formatUnits(await client().getBalance({ address: v }), 18)) : holding(v, tokenOf(asset));
+}
+
 const decimals = new Map();
 async function decimalsOf(token) {
   if (!decimals.has(token)) decimals.set(token, await client().readContract({ address: token, abi: erc20Abi, functionName: 'decimals' }));

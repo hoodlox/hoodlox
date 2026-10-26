@@ -42,16 +42,9 @@ export const poolAssets = () => [
   { asset: TOKEN, funded: config.pool.HOODL },
   { asset: 'STOCK_USD', funded: config.pool.STOCK_USD },
 ];
-export async function poolValueUsd() {
-  let total = 0;
-  for (const p of poolAssets()) total += p.asset === 'STOCK_USD' ? p.funded : p.funded * (await priceUsd(p.asset));
-  return total;
-}
 // A crate's dollar value: its share of the epoch pool by rarity weight, so opening every crate of an
-// epoch pays out exactly that epoch's pool.
-export async function crateValueUsd(n, rarityId) {
-  return ((await poolValueUsd()) * TIER[rarityId]) / layout(n).weight;
-}
+// epoch pays out exactly that epoch's pool (poolUsd: what that epoch's pool was actually funded with).
+export const crateValueUsd = (n, rarityId, poolUsd) => (poolUsd * TIER[rarityId]) / layout(n).weight;
 
 // Pick which asset an opened chest pays, weighted by what is left of each in the pool, and size it to
 // the chest's dollar value.

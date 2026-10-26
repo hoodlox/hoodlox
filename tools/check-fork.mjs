@@ -40,9 +40,12 @@ for (const [to, n] of [[player.address, '5000000'], [vault.address, '5000000'], 
 }
 
 Object.assign(process.env, {
-  RPC_URL: RPC, VAULT_KEY: vaultKey, HOODL_TOKEN: HOODL, HOODL_MIN_HOLD: '1000000', POOL_ETH: '0.01', POOL_HOODL: '2000000', POOL_STOCK_USD: '0',
+  RPC_URL: RPC, VAULT_KEY: vaultKey, HOODL_TOKEN: HOODL, HOODL_MIN_HOLD: '1000000', POOL_ETH: '5', POOL_HOODL: '2000000', POOL_STOCK_USD: '0',
   PGLITE_DIR: mkdtempSync(join(tmpdir(), 'th-fork-')), ALLOW_TEST_KNOBS: '1',
 });
+// A demo-era balance left in the database must be wiped when the game first runs live.
+const { q } = await import('../server/db.js');
+await q(`insert into balances (player, asset, amount) values ('0xDemo', 'ETH', 3)`);
 const { handle } = await import('../server/routes.js');
 const FAST = { 'x-fastdig': '30' };
 async function call(path, { token, body } = {}) {
@@ -55,6 +58,11 @@ const eth = async () => Number(formatEther(await pub.getBalance({ address: playe
 const cfg = await call('/api/config');
 assert.equal(cfg.demo, false);
 assert.equal(cfg.vault, vault.address);
+assert.equal((await q('select count(*)::int as n from balances'))[0].n, 0, 'going live clears demo balances');
+// POOL_ETH asks for 5 ETH an epoch; the vault holds 1, so the epoch gets what it can cover.
+const ethPool = (await call('/api/epoch')).pool.find((p) => p.asset === 'ETH').funded;
+console.log('epoch ETH pool (asked 5, vault holds 1):', ethPool);
+assert.ok(ethPool > 0.99 && ethPool <= 0.998, 'pool is capped to the vault minus gas');
 
 // 1. Enter with the address only. Holders get in; an empty wallet and the vault itself do not.
 const nobody = privateKeyToAccount(generatePrivateKey()).address;

@@ -5,7 +5,7 @@ import { q, one } from './db.js';
 import { issue, verify, addressId, guestId, isGuest } from './auth.js';
 import { epochOf, epochEndsAt, layout, publicLayout, poolAssets, crateValueUsd, pickReward } from './rules.js';
 import { priceUsd } from './prices.js';
-import { holding, payable, verifyPurchase, sendPayout, payoutState, vaultAccount } from './chain.js';
+import { holding, vaultHolds, payable, verifyPurchase, sendPayout, payoutState, vaultAccount } from './chain.js';
 import { TOOLS, tool as toolOf, HEROES, TOKEN, TOKEN_SUPPLY, levelOf, validName } from '../src/game.js';
 
 const fail = (status, error) => { throw Object.assign(new Error(error), { status }); };
@@ -51,9 +51,25 @@ async function me(id) {
   };
 }
 
+// With a live vault an epoch never promises more than the vault can still cover: its holding minus
+// unredeemed balances and queued payouts, keeping a little ETH for redeem gas.
+const GAS_ETH = 0.002;
+async function affordable({ asset, funded }) {
+  if (!vaultAccount() || asset === 'STOCK_USD' || funded <= 0) return funded;
+  const held = await vaultHolds(asset).catch(() => fail(503, 'Could not read the vault. Try again.'));
+  const owed = await one(`select coalesce((select sum(amount) from balances where asset = $1), 0)
+    + coalesce((select sum((i->>'amount')::float8) from payouts, jsonb_array_elements(items) i
+      where status in ('pending', 'sending') and i->>'asset' = $1), 0) as n`, [asset]);
+  return Math.max(0, Math.min(funded, held - Number(owed.n) - (asset === 'ETH' ? GAS_ETH : 0)));
+}
+
+// An epoch's pool is fixed by the first request that sees the epoch.
 async function pool(n) {
-  await q(`insert into pools (epoch, asset, funded) select $1, a, f from unnest($2::text[], $3::float8[]) as t(a, f) on conflict do nothing`,
-    [n, poolAssets().map((p) => p.asset), poolAssets().map((p) => p.funded)]);
+  if (!(await one('select 1 as x from pools where epoch = $1 limit 1', [n]))) {
+    const assets = await Promise.all(poolAssets().map(async (p) => ({ ...p, funded: await affordable(p) })));
+    await q(`insert into pools (epoch, asset, funded) select $1, a, f from unnest($2::text[], $3::float8[]) as t(a, f) on conflict do nothing`,
+      [n, assets.map((p) => p.asset), assets.map((p) => p.funded)]);
+  }
   const rows = await q('select asset, funded, paid from pools where epoch = $1', [n]);
   const out = [];
   for (const r of rows) {
@@ -174,7 +190,7 @@ const routes = {
         and ready_at <= now() + interval '1 second' and claim_until > now() returning idx`, [n, i, id]);
     if (!done) fail(409, 'This dig is not finished, or the crate was lost.');
     const crate = layout(n).crates[i];
-    const value = await crateValueUsd(n, crate.rarity);
+    const value = crateValueUsd(n, crate.rarity, (await pool(n)).reduce((a, p) => a + p.usd, 0));
     const chest = await one('insert into chests (player, epoch, idx, rarity, value_usd) values ($1, $2, $3, $4, $5) returning id',
       [id, n, i, crate.rarity, value]);
     await q('update players set treasures = treasures + 1 where id = $1', [id]);
@@ -300,10 +316,23 @@ async function processPayout(pid) {
   }
 }
 
+// The first request after $HOODL goes live clears the demo economy, once: demo balances, chests,
+// pools, payouts and tools bought with demo $HOODL must never be paid from the real vault. Hunters
+// (names, heroes, distance) stay. The meta row makes it run once across every server instance.
+let goLive;
+const liveOnce = () => (goLive ??= (async () => {
+  if (!config.hoodlToken) return;
+  const first = await one(`insert into meta (k, v) values ('live', $1) on conflict do nothing returning k`, [config.hoodlToken]);
+  if (!first) return;
+  for (const t of ['balances', 'chests', 'pools', 'payouts', 'purchases', 'crates']) await q(`delete from ${t}`);
+  await q(`update players set tools = '{shovel}', equipped = 'shovel', demo_tokens = 0, profit_usd = 0, treasures = 0`);
+})().catch((e) => { goLive = null; throw e; }));
+
 export async function handle({ method, path, headers = {}, body = {} }) {
   const route = routes[`${method} ${path.replace(/\/$/, '')}`];
   if (!route) return { status: 404, body: { error: 'Not found' } };
   try {
+    await liveOnce();
     return { status: 200, body: await route({ method, path, headers, body: body ?? {} }) };
   } catch (e) {
     if (!e.status) console.error(e);

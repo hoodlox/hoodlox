@@ -201,6 +201,7 @@
     .sense[data-level="warm"] { --c: #f3c35a; } .sense[data-level="hot"] { --c: #ff8a3d; } .sense[data-level="burning"] { --c: #ff4d4d; } .sense[data-level="none"] { --c: var(--muted); }
     .sense[data-level="hot"] i { animation: beat .8s infinite alternate; } .sense[data-level="burning"] i { animation: beat .35s infinite alternate; }
     @keyframes beat { to { transform: scale(1.7); } }
+    a.btn { text-align: center; text-decoration: none; }
 
     /* found / reveal modals */
     .modal { position: fixed; z-index: 50; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(8,9,12,.6); backdrop-filter: blur(3px); }

@@ -90,7 +90,7 @@ const MARKUP = `
     <p class="found__tag reveal__tag"></p>
     <h2 id="reveal-title" class="reveal__title">Opening…</h2>
     <p class="reveal__usd"></p>
-    <div class="modal__actions"><button class="btn btn--primary reveal__ok" type="button" disabled>Collect</button></div>
+    <div class="modal__actions"><a class="btn reveal__share" target="_blank" rel="noopener" hidden>Share on X</a><button class="btn btn--primary reveal__ok" type="button" disabled>Collect</button></div>
   </div>
 </div>
 </div>`;
@@ -258,6 +258,7 @@ export function createHUD({ me, sites, player, onOpen = () => {}, onDash = () =>
     $('.reveal__tag').textContent = `${r.name} chest`;
     $('.reveal__title').textContent = 'Opening…';
     $('.reveal__usd').textContent = '';
+    $('.reveal__share').hidden = true;
     $('.reveal__ok').disabled = true;
     m.hidden = false;
     onOpen();
@@ -270,6 +271,11 @@ export function createHUD({ me, sites, player, onOpen = () => {}, onDash = () =>
     $('.reveal__img').src = chestImg(c.rarity, true);
     $('.reveal__title').textContent = res.reward ? `+${amount(res.reward.asset, res.reward.amount)} ${res.reward.asset}` : 'Empty: this epoch’s pool is spent';
     $('.reveal__usd').textContent = res.reward ? `≈ ${usd(res.reward.usd)}` : '';
+    if (res.reward) {
+      const text = `I just dug up ${/^[AEIOU]/.test(r.name) ? 'an' : 'a'} ${r.name} chest in Hoodlox and won ${usd(res.reward.usd)} in ${res.reward.asset} ⛏️\n\nHold ${TOKEN}, dig crates, claim to your wallet 👇`;
+      $('.reveal__share').href = `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent('https://play.hoodlox.fun')}`;
+      $('.reveal__share').hidden = false;
+    }
     $('.reveal__ok').disabled = false;
     $('.reveal__ok').focus();
     renderBag();

@@ -23,7 +23,8 @@ const pub = createPublicClient({ chain, transport: http(rpc) });
 const wallet = createWalletClient({ account, chain, transport: http(rpc) });
 
 const STOCKS = { TSLA: '0x322F0929c4625eD5bAd873c95208D54E1c003b2d', NVDA: '0xd0601CE157Db5bdC3162BbaC2a2C8aF5320D9EEC', AAPL: '0xaF3D76f1834A1d425780943C99Ea8A608f8a93f9', SPY: '0x117cc2133c37B721F49dE2A7a74833232B3B4C0C' };
-const tokens = { ...(process.env.HOODL_TOKEN ? { HOODL: process.env.HOODL_TOKEN } : {}), ...(process.env.STOCK_TOKENS ? JSON.parse(process.env.STOCK_TOKENS) : STOCKS) };
+const USDG = process.env.USDG_TOKEN ?? '0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168';
+const tokens = { ...(process.env.HOODL_TOKEN ? { HOODL: process.env.HOODL_TOKEN } : {}), USDG, ...(process.env.STOCK_TOKENS ? JSON.parse(process.env.STOCK_TOKENS) : STOCKS) };
 
 console.log(`vault ${account.address} → ${getAddress(to)}  (${send ? 'SENDING' : 'dry run, add --yes to send'})`);
 const plan = [];
@@ -45,8 +46,17 @@ if (!onlyAsset || onlyAsset === 'ETH') {
   if (amt > 0n) plan.push({ asset: 'ETH', amt, dec: 18 });
 }
 for (const p of send ? plan : []) { // tokens first, ETH last so gas is there for every transfer
+  if (p.asset === 'ETH' && !(partial && onlyAsset === 'ETH')) {
+    // A full sweep: everything except this transfer's own gas, priced now with headroom. Gas is
+    // estimated, not 21000: Robinhood Chain (Arbitrum Orbit) adds an L1 data component to it.
+    const fees = await pub.estimateFeesPerGas();
+    p.gas = (await pub.estimateGas({ account: account.address, to, value: 1n })) * 12n / 10n;
+    p.maxFee = (fees.maxFeePerGas ?? fees.gasPrice) * 2n;
+    p.amt = (await pub.getBalance({ address: account.address })) - p.gas * p.maxFee;
+    if (p.amt <= 0n) continue;
+  }
   const hash = p.asset === 'ETH'
-    ? await wallet.sendTransaction({ to, value: p.amt })
+    ? await wallet.sendTransaction({ to, value: p.amt, ...(p.gas ? { gas: p.gas, maxFeePerGas: p.maxFee, maxPriorityFeePerGas: 0n } : {}) })
     : await wallet.writeContract({ address: p.token, abi: erc20Abi, functionName: 'transfer', args: [to, p.amt] });
   const r = await pub.waitForTransactionReceipt({ hash });
   console.log(`  sent ${formatUnits(p.amt, p.dec)} ${p.asset}: ${r.status} ${hash}`);
